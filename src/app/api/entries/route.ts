@@ -33,7 +33,7 @@ export const POST = userRoute({ body: createEntryRequest, rateLimit: true }, asy
     return aiErrorResponse(error);
   }
 
-  const { missed, ...data } = structured;
+  const { missed, followUps, ...data } = structured;
   // Only keep "missed" links that really are in today's activity (no invented URLs).
   const known = new Set(activity.map((a) => a.url));
   const entry = await createEntry(user.id, {
@@ -43,7 +43,7 @@ export const POST = userRoute({ body: createEntryRequest, rateLimit: true }, asy
     words: body.text.split(/\s+/).filter(Boolean).length,
   });
   return Response.json(
-    { entry, missed: missed.filter((m) => known.has(m.url)), activityCount: activity.length },
+    { entry, missed: missed.filter((m) => known.has(m.url)), followUps, activityCount: activity.length },
     { status: 201, headers: NO_STORE },
   );
 });

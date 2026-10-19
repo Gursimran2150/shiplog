@@ -43,6 +43,19 @@ export const structuredLogSchema = entryDataSchema.extend({
     .array(z.object({ text: z.string().max(200), url: z.string().url() }))
     .max(10)
     .describe("GitHub commits/PRs from the reference data that the engineer did not mention"),
+  followUps: z
+    .array(z.string().max(160))
+    .max(3)
+    .describe(
+      "Up to 3 short questions that would make the log more useful: for blockers ask who/what you're waiting on, since when, and what would unblock it; for vague items ask for the outcome or a number. Empty when the log is already clear.",
+    ),
+});
+
+export const refineEntryRequest = z.object({
+  answers: z
+    .array(z.object({ question: z.string().trim().min(1).max(160), answer: z.string().trim().min(1).max(1000) }))
+    .min(1, "Answer at least one question.")
+    .max(3),
 });
 
 export const createEntryRequest = z.object({

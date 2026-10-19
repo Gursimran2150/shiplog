@@ -117,6 +117,13 @@ export async function updateEntryData(userId: string, id: string, data: EntryDat
   return row ? toEntry(row) : null;
 }
 
+export async function getEntry(userId: string, id: string): Promise<Entry | null> {
+  const result = await db()`
+    SELECT id, date::text, raw, data, words, created_at FROM entries WHERE id = ${id} AND user_id = ${userId}`;
+  const [row] = rows(entryRow, result);
+  return row ? toEntry(row) : null;
+}
+
 export async function deleteEntry(userId: string, id: string): Promise<boolean> {
   const result = await db()`DELETE FROM entries WHERE id = ${id} AND user_id = ${userId} RETURNING id`;
   return rows(idRow, result).length > 0;

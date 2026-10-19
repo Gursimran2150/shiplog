@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Entry } from "@/lib/domain/types";
-import { askPrompt, formatEntries, reportPrompt, structurePrompt, ticketPrompt } from "./prompts";
+import { askPrompt, formatEntries, refinePrompt, reportPrompt, structurePrompt, ticketPrompt } from "./prompts";
 
 const entry = (date: string, done: string, project: string | null = "web"): Entry => ({
   id: date,
@@ -40,5 +40,12 @@ describe("prompts", () => {
     const a = askPrompt("what did I ship?", [entry("2026-10-20", "Shipped X")], "2026-10-20");
     expect(a.system).toContain("Shipped X");
     expect(askPrompt("q", [], "2026-10-20").system).toContain("No journal entries found.");
+  });
+
+  it("structure prompt asks for follow-ups; refine prompt wraps answers as data", () => {
+    expect(structurePrompt("2026-10-20", "")).toContain("followUps");
+    const r = refinePrompt(entry("2026-10-20", "Shipped X").data, [{ question: "Waiting on whom?", answer: "Rahul" }]);
+    expect("prompt" in r && r.prompt).toContain("<user_input>\nQ: Waiting on whom?\nA: Rahul");
+    expect(r.system).toContain("Shipped X");
   });
 });

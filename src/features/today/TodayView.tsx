@@ -7,6 +7,7 @@ import { SECTIONS, SECTION_LABELS, type Entry } from "@/lib/domain/types";
 import { EarlierToday } from "./EarlierToday";
 import { itemCount } from "./entry-edit";
 import { FirstRunGuide } from "./FirstRunGuide";
+import { FollowUpPanel } from "./FollowUpPanel";
 import { GithubActivityPanel } from "./GithubActivityPanel";
 import { LogComposer } from "./LogComposer";
 import { MissedPanel } from "./MissedPanel";
@@ -25,7 +26,10 @@ export function TodayView() {
   const today = useToday();
   const timeZone = useTimeZone();
   const { entries, isLoading } = useEntries(today, today);
-  const { result, submitting, error, submit, addMissed, editResult, forget } = useDayLog(today, timeZone);
+  const { result, submitting, error, submit, addMissed, editResult, refine, dismissFollowUps, forget } = useDayLog(
+    today,
+    timeZone,
+  );
   const wordsToday = useMemo(() => entries.reduce((sum, e) => sum + e.words, 0), [entries]);
   const saved = useMemo(() => result && { words: result.entry.words, items: itemCount(result.entry.data) }, [result]);
 
@@ -49,10 +53,10 @@ export function TodayView() {
             <SectionsSkeleton />
           ) : (
             result && (
-              <>
-                <StructuredResult entry={result.entry} onEdit={editResult} />
+              <StructuredResult entry={result.entry} onEdit={editResult}>
+                <FollowUpPanel questions={result.followUps} onAnswer={refine} onSkip={dismissFollowUps} />
                 <MissedPanel missed={result.missed} onAdd={addMissed} />
-              </>
+              </StructuredResult>
             )
           )}
           <EarlierToday entries={entries} isLoading={isLoading} onDeleted={forget} />

@@ -20,7 +20,7 @@ interface SpeakingPromptsProps {
 export function SpeakingPrompts({ disabled, onPick }: SpeakingPromptsProps) {
   const labelId = useId();
   return (
-    <div role="group" aria-labelledby={labelId} className="mt-3 flex flex-wrap items-center gap-1.5">
+    <div role="group" aria-labelledby={labelId} className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
       <span id={labelId} className="mr-1 text-xs text-muted-foreground">
         Not sure what to say? Cover:
       </span>

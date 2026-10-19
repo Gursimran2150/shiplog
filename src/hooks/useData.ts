@@ -9,6 +9,7 @@ import type {
   DayCount,
   Entry,
   EntryData,
+  FollowUpAnswer,
   Integration,
   IntegrationStatus,
   MissedActivity,
@@ -78,7 +79,12 @@ export function useJournalActions() {
 
   const createEntry = useCallback(
     async (text: string, date: string, timeZone: string) => {
-      const result = await api.post<{ entry: Entry; missed: MissedActivity[]; activityCount: number }>("/api/entries", {
+      const result = await api.post<{
+        entry: Entry;
+        missed: MissedActivity[];
+        followUps: string[];
+        activityCount: number;
+      }>("/api/entries", {
         text,
         date,
         timeZone,
@@ -98,6 +104,15 @@ export function useJournalActions() {
     [refresh],
   );
 
+  const refineEntry = useCallback(
+    async (id: string, answers: FollowUpAnswer[]) => {
+      const { entry } = await api.post<{ entry: Entry }>(`/api/entries/${id}/refine`, { answers });
+      await refresh();
+      return entry;
+    },
+    [refresh],
+  );
+
   const deleteEntry = useCallback(
     async (id: string) => {
       await api.delete(`/api/entries/${id}`);
@@ -106,7 +121,7 @@ export function useJournalActions() {
     [refresh],
   );
 
-  return { createEntry, updateEntry, deleteEntry };
+  return { createEntry, updateEntry, refineEntry, deleteEntry };
 }
 
 /** Connection state for a code host (GitHub App or Bitbucket OAuth). */

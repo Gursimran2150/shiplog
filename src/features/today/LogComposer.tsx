@@ -1,9 +1,11 @@
 "use client";
 
 import { CircleCheck, Sparkles } from "lucide-react";
-import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useId, type FormEvent, type KeyboardEvent } from "react";
+import { MicButton } from "@/components/MicButton";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useDictationField } from "@/hooks/useDictationField";
 import { MAX_LOG_CHARS } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
 import { appendStarter, countWords } from "./log-text";
@@ -27,20 +29,21 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 /** The dictation box: Wispr Flow types into it, ⌘/Ctrl+Enter sends it to be structured. */
 export function LogComposer({ ready, submitting, error, onSubmit, saved = null }: LogComposerProps) {
   const ids = { text: useId(), hint: useId(), count: useId(), error: useId() };
-  const [text, setText] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Uncontrolled field: dictation tools may insert text without input events (see useDictationField).
+  const { ref: textareaRef, value: text, setValue: setText, append, read } = useDictationField<HTMLTextAreaElement>();
   const chars = text.length;
   const canSubmit = ready && !submitting && text.trim().length >= MIN_CHARS;
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!canSubmit) return;
-    if (await onSubmit(text.trim())) setText("");
+    const current = read().trim();
+    if (!ready || submitting || current.length < MIN_CHARS) return;
+    if (await onSubmit(current)) setText("");
   }
 
   /** Adds a starter phrase on a new line and puts the caret after it, ready for dictation. */
   function handlePrompt(starter: string) {
-    const next = appendStarter(text, starter);
+    const next = appendStarter(read(), starter);
     setText(next);
     const box = textareaRef.current;
     if (!box) return;
@@ -61,14 +64,12 @@ export function LogComposer({ ready, submitting, error, onSubmit, saved = null }
         Tell ShipLog about your day
       </Label>
       <p id={ids.hint} className="mt-1.5 text-sm text-muted-foreground">
-        Hold your Wispr Flow key and talk — Hinglish is fine. Press{" "}
+        Hold your Wispr Flow key and talk (or use the microphone below). Hinglish is fine. Press{" "}
         <kbd className="rounded border border-border bg-muted px-1 font-mono text-xs">⌘/Ctrl + Enter</kbd> to submit.
       </p>
       <textarea
         id={ids.text}
         ref={textareaRef}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
         maxLength={MAX_LOG_CHARS}
         rows={7}
@@ -78,7 +79,10 @@ export function LogComposer({ ready, submitting, error, onSubmit, saved = null }
         disabled={submitting}
         className="mt-3 block min-h-40 w-full resize-y rounded-md border border-input bg-transparent px-3 py-2.5 text-base leading-relaxed outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 aria-invalid:border-destructive dark:bg-input/30"
       />
-      <SpeakingPrompts disabled={submitting} onPick={handlePrompt} />
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <SpeakingPrompts disabled={submitting} onPick={handlePrompt} />
+        <MicButton onText={append} disabled={submitting} />
+      </div>
       {saved && !text && !submitting && !error && (
         <p className="mt-3 flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
           <CircleCheck aria-hidden="true" className="size-3.5 text-success" />

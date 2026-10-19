@@ -90,3 +90,8 @@ export interface IntegrationStatus {
   login: string | null;
   manageUrl: string | null;
 }
+
+export interface FollowUpAnswer {
+  question: string;
+  answer: string;
+}

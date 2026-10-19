@@ -44,6 +44,11 @@ test("security headers are set", async ({ request }) => {
   expect(res.headers()["x-content-type-options"]).toBe("nosniff");
 });
 
+test("a ?tab= link opens that report tab", async ({ page }) => {
+  await page.goto("/reports?tab=weekly");
+  await expect(page.getByRole("tab", { name: "Weekly report" })).toHaveAttribute("aria-selected", "true");
+});
+
 test("APIs reject invalid input", async ({ request }) => {
   expect((await request.post("/api/entries", { data: { text: "", date: "x", timeZone: "UTC" } })).status()).toBe(400);
   expect((await request.get("/api/stats?from=bad&to=2026-10-20")).status()).toBe(400);
@@ -63,6 +68,16 @@ test.describe("real AI calls", () => {
     await page.getByRole("button", { name: /Structure my day/ }).click();
     await expect(page.getByRole("heading", { name: /Done/ }).first()).toBeVisible({ timeout: 60_000 });
     await expect(page.getByText(/redirect/i).first()).toBeVisible();
+    const next = page.getByRole("navigation", { name: "Next steps" });
+    await expect(next.getByRole("link", { name: /Generate today's standup/ })).toBeVisible();
+
+    // Follow-up questions are the model's call; when it asks, answering one refines the log.
+    const followUps = page.getByRole("region", { name: "A few quick questions" });
+    if (await followUps.isVisible()) {
+      await followUps.getByRole("textbox").first().fill("Waiting on Rahul from backend since Monday.");
+      await followUps.getByRole("button", { name: /Update my log/ }).click();
+      await expect(followUps).toBeHidden({ timeout: 60_000 });
+    }
   });
 
   test("a weekly report is generated from the demo logs", async ({ page }) => {

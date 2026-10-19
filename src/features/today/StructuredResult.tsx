@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { SECTIONS, type Entry, type EntryData, type Section } from "@/lib/domain/types";
 import { addItem, removeItem, updateItem } from "./entry-edit";
 import { NextSteps } from "./NextSteps";
@@ -11,10 +11,12 @@ import { useTicket } from "./useTicket";
 interface StructuredResultProps {
   entry: Entry;
   onEdit: (change: (data: EntryData) => EntryData) => void;
+  /** Panels that refine the entry (follow-up questions, missed GitHub work), shown above Next steps. */
+  children?: ReactNode;
 }
 
 /** The freshly structured entry as four editable cards. Focus moves to its heading when a new entry arrives. */
-export function StructuredResult({ entry, onEdit }: StructuredResultProps) {
+export function StructuredResult({ entry, onEdit, children }: StructuredResultProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
   const { state, draft, close } = useTicket(entry.data.summary);
@@ -46,7 +48,7 @@ export function StructuredResult({ entry, onEdit }: StructuredResultProps) {
   }, []);
 
   return (
-    <section aria-labelledby="today-result-heading" className="flex flex-col gap-3">
+    <section aria-labelledby="today-result-heading" className="flex flex-col gap-4">
       <div>
         <h2
           id="today-result-heading"
@@ -74,6 +76,7 @@ export function StructuredResult({ entry, onEdit }: StructuredResultProps) {
           />
         ))}
       </div>
+      {children}
       <NextSteps hasBlockers={entry.data.blockers.length > 0} onTicketBlockers={focusFirstBlocker} />
       <TicketDialog state={state} onClose={close} onRetry={draft} />
     </section>

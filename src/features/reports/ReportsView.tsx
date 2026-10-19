@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useSyncExternalStore } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,9 +14,19 @@ const TABS = [
   { value: "weekly", label: "Weekly report", Panel: WeeklyTab },
   { value: "brag", label: "Brag doc", Panel: BragTab },
 ] as const;
+type TabValue = (typeof TABS)[number]["value"];
+
+const noopSubscribe = () => () => {};
+/** `/reports?tab=weekly` opens that tab (links from Today); anything else falls back to Standup. */
+function tabFromUrl(): TabValue {
+  const tab = new URLSearchParams(window.location.search).get("tab");
+  return TABS.find((t) => t.value === tab)?.value ?? "standup";
+}
 
 export function ReportsView() {
   const today = useToday();
+  const linked = useSyncExternalStore(noopSubscribe, tabFromUrl, () => "standup" as const);
+  const [picked, setPicked] = useState<TabValue | null>(null);
 
   return (
     <>
@@ -25,7 +36,7 @@ export function ReportsView() {
         description="Generated from your logs. Unchanged logs return the saved report instantly."
       />
       {today ? (
-        <Tabs defaultValue="standup" className="gap-6">
+        <Tabs value={picked ?? linked} onValueChange={(v) => setPicked(v as TabValue)} className="gap-6">
           <TabsList aria-label="Report type">
             {TABS.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value} className="px-3">

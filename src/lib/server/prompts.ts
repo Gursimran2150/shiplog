@@ -1,7 +1,15 @@
 import { buildSystemPrompt, wrapUserInput } from "@/lib/ai/prompts";
 import type { StreamPrompt } from "@/lib/ai/stream-route";
 import { formatDay } from "@/lib/domain/dates";
-import { SECTION_LABELS, SECTIONS, type Entry, type ReportKind, type StandupFormat } from "@/lib/domain/types";
+import {
+  SECTION_LABELS,
+  SECTIONS,
+  type Entry,
+  type EntryData,
+  type FollowUpAnswer,
+  type ReportKind,
+  type StandupFormat,
+} from "@/lib/domain/types";
 
 const PERSONA = "You are ShipLog, a work-journal assistant for software engineers.";
 
@@ -25,6 +33,7 @@ export function structurePrompt(today: string, activity: string): string {
       "Split it into done, inProgress, blockers and tomorrow. Each item is one short, concrete phrase in clear English.",
       "Keep technical names, ticket ids and numbers exactly as said. Do not add work that wasn't said.",
       "If reference GitHub activity is given, list in `missed` only the commits/PRs that are NOT covered by anything the engineer said, using their exact URLs.",
+      "In `followUps`, ask at most 3 short, specific questions that would make blockers actionable or vague items concrete. Ask nothing if the log is already clear.",
     ].join(" "),
     context: activity || undefined,
   });
@@ -75,5 +84,16 @@ export function askPrompt(question: string, entries: readonly Entry[], today: st
       context: entries.length ? formatEntries(entries) : "No journal entries found.",
     }),
     prompt: wrapUserInput(question),
+  };
+}
+
+/** Folds the engineer's answers to follow-up questions back into the structured entry. */
+export function refinePrompt(data: EntryData, answers: readonly FollowUpAnswer[]): StreamPrompt {
+  return {
+    system: buildSystemPrompt({
+      role: `${PERSONA} You are updating an existing structured log with the engineer's answers to follow-up questions. Keep every existing item unless an answer clearly corrects it. Add the new details (who or what a blocker is waiting on, since when, what unblocks it, outcomes, numbers) to the matching items, or add new items if an answer reveals new work. Keep items short. Update the one-sentence summary if needed.`,
+      context: JSON.stringify(data),
+    }),
+    prompt: answers.map((a) => wrapUserInput(`Q: ${a.question}\nA: ${a.answer}`)).join("\n\n"),
   };
 }
