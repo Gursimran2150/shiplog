@@ -48,13 +48,19 @@ It's built for one person's own workflow: frontend, backend or full-stack engine
 
 ## 🚀 Try it now (no sign-up)
 
-| Option                         | How                                                                                                                                                                                                                                                                                                           |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **One-tap demo** (recommended) | Open **[shiplog-voice.vercel.app](https://shiplog-voice.vercel.app)** and click **"Try the demo"**, then pick **"Account with mock data"** (two weeks of sample logs, so the timeline, reports and search work right away) or **"Fresh empty account"** (start blank and log your own day). Both are private. |
-| **Shared demo login**          | `demo@shiplog.dev` / `shiplog-demo-2026`                                                                                                                                                                                                                                                                      |
-| **Your own account**           | Click **"New here? Create an account"**.                                                                                                                                                                                                                                                                      |
+| Option                         | How                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **One-tap demo** (recommended) | Open **[shiplog-voice.vercel.app](https://shiplog-voice.vercel.app)** and click **"Try the demo"**, then pick **"Account with mock data"** (about 18 months of realistic work logs, so the timeline, reports and search work right away) or **"Fresh empty account"** (start blank and log your own day). Both are private. |
+| **Shared demo login**          | `demo@shiplog.dev` / `shiplog-demo-2026` (same sample journal, shared by everyone who uses it)                                                                                                                                                                                                                              |
+| **Your own account**           | Click **"New here? Create an account"**.                                                                                                                                                                                                                                                                                    |
 
 <p align="center"><img src="docs/screenshots/landing.png" width="880" alt="ShipLog landing and login page" /></p>
+
+<p align="center"><img src="docs/screenshots/demo-chooser.png" width="760" alt="Try the demo: choose an account with mock data or a fresh empty account" /></p>
+
+### What's in the mock-data account
+
+A fictional frontend engineer's journal: **~340 working days over 18 months**, one log a day, written the way people actually talk (Hinglish). They work through 16 projects (design system, auth, checkout, dashboard, performance, billing, i18n, editor…), with code reviews, on-call, interviews and production bugs in between. Blockers come up and get resolved ("waiting on Rahul for the usage API"), each project ends with a measurable result ("conversion up 9%"), and there are weekends, holidays, a week of leave and the odd forgotten day. The heatmap, streaks, weekly reports, 6-month brag doc and Ask all have real history to work from. Every report and answer is still a live AI call.
 
 ---
 
@@ -101,7 +107,10 @@ Reopen a report on unchanged logs and it comes back instantly as **"Saved report
 <table>
 <tr>
 <td><img src="docs/screenshots/reports-standup.png" alt="Slack-formatted standup" /></td>
-<td><img src="docs/screenshots/reports-brag.png" alt="Brag doc grouped by project" /></td>
+<td><img src="docs/screenshots/reports-weekly.png" alt="Weekly report for last week" /></td>
+</tr>
+<tr>
+<td colspan="2"><img src="docs/screenshots/reports-brag.png" alt="Six-month brag doc grouped by project, with impact" /></td>
 </tr>
 </table>
 
@@ -144,7 +153,7 @@ Reopen a report on unchanged logs and it comes back instantly as **"Saved report
 
 Go to **Settings → Private & company repos**. You never create an app or token yourself. You click Connect, approve on GitHub's or Bitbucket's own page, and come back.
 
-<p align="center"><img src="docs/screenshots/settings.png" width="880" alt="Settings with GitHub and Bitbucket connections and data controls" /></p>
+<p align="center"><img src="docs/screenshots/settings-connect.png" width="880" alt="Settings: public GitHub username, plus Connect GitHub and Connect Bitbucket for private repos" /></p>
 
 ### Public GitHub (simplest)
 

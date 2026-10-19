@@ -19,7 +19,7 @@ const OPTIONS = [
     value: "mock",
     Icon: Database,
     title: "Account with mock data",
-    body: "Two weeks of sample logs, so the timeline, streak, reports and Ask work right away.",
+    body: "18 months of realistic work logs: projects, blockers, reviews and shipped results. Timeline, reports and Ask work right away.",
     badge: "Recommended",
   },
   {

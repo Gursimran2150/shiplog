@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { memo, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { addDays } from "@/lib/domain/dates";
 import { cn } from "@/lib/utils";
 import { cellLabel, HEAT_CLASSES, type HeatmapGrid } from "./heatmap-grid";
@@ -23,7 +23,8 @@ interface HeatmapProps {
 export const Heatmap = memo(function Heatmap({ grid, first, today, selected, onSelect }: HeatmapProps) {
   const helpId = useId();
   const container = useRef<HTMLDivElement>(null);
-  // One shared readout instead of a tooltip per cell (182 cells): far fewer DOM nodes and listeners.
+  const scroller = useRef<HTMLDivElement>(null);
+  // One shared readout instead of a tooltip per cell (364 cells): far fewer DOM nodes and listeners.
   const [hovered, setHovered] = useState<string | null>(null);
   const labels = useMemo(
     () =>
@@ -32,6 +33,12 @@ export const Heatmap = memo(function Heatmap({ grid, first, today, selected, onS
       ),
     [grid],
   );
+
+  // A year doesn't fit on small screens: start scrolled to the most recent weeks, like GitHub.
+  useEffect(() => {
+    const el = scroller.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, []);
 
   function move(date: string) {
     const next = date < first ? first : date > today ? today : date;
@@ -49,7 +56,7 @@ export const Heatmap = memo(function Heatmap({ grid, first, today, selected, onS
   }
 
   return (
-    <div className="overflow-x-auto pb-1">
+    <div ref={scroller} className="overflow-x-auto pb-1">
       <p id={helpId} className="sr-only">
         Each button is one day. Use the arrow keys to move between days and Enter to show that week below.
       </p>
@@ -76,7 +83,7 @@ export const Heatmap = memo(function Heatmap({ grid, first, today, selected, onS
           <div
             ref={container}
             role="group"
-            aria-label="Logged items per day, last 26 weeks"
+            aria-label="Logged items per day, last 12 months"
             aria-describedby={helpId}
             onKeyDown={onKeyDown}
             className="grid grid-flow-col grid-rows-7 gap-[3px]"

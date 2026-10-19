@@ -14,7 +14,7 @@ import { WeekEntries } from "./WeekEntries";
 
 const EMPTY_STATS = { streak: 0, daysLogged: 0, items: 0 };
 
-/** Timeline: 26-week heatmap, period stats, and the selected week's logs. */
+/** Timeline: 12-month heatmap, period stats, and the selected week's logs. */
 export function TimelineView() {
   const today = useToday();
   const [picked, setPicked] = useState<string | null>(null);
@@ -41,7 +41,7 @@ export function TimelineView() {
   return (
     <>
       <PageHeader
-        eyebrow="Last 26 weeks"
+        eyebrow="Last 12 months"
         title="Timeline"
         description="Every day you logged, at a glance. Pick a day to see that week's work."
       />

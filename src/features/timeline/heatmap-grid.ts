@@ -1,7 +1,7 @@
 import { addDays, formatDay, weekStart } from "@/lib/domain/dates";
 import type { DayCount } from "@/lib/domain/types";
 
-const HEATMAP_WEEKS = 26;
+const HEATMAP_WEEKS = 52;
 
 /** Literal class names so Tailwind picks them up; index = heat level. */
 export const HEAT_CLASSES = ["bg-heat-0", "bg-heat-1", "bg-heat-2", "bg-heat-3", "bg-heat-4"] as const;

@@ -1,10 +1,14 @@
 import type { EntryData } from "@/lib/domain/types";
 import { addDays } from "@/lib/domain/dates";
+import { demoHistory, type DemoEntry } from "./demo-history";
+
+/** How far back demo history goes: about a year and a half of working days. */
+const HISTORY_DAYS = 540;
 
 /**
- * Two weeks of sample logs for one-tap demo accounts, so judges can try reports, the
- * timeline and "Ask your journal" immediately. Clearly sample data for a fictional engineer;
- * every report and answer generated from it is still a live AI call.
+ * The most recent two weeks of a demo journal, hand-written so they read like a real story; older
+ * history comes from `demoHistory`. Clearly sample data for a fictional engineer; every report
+ * and answer generated from it is still a live AI call.
  */
 const SAMPLES: { raw: string; data: EntryData }[] = [
   {
@@ -138,8 +142,11 @@ const SAMPLES: { raw: string; data: EntryData }[] = [
   },
 ];
 
-/** Assigns samples to the last N weekdays before `today`, oldest first. */
-export function demoEntries(today: string): { date: string; raw: string; data: EntryData }[] {
+/**
+ * A demo journal: ~18 months of generated history, then the hand-written samples on the last
+ * N weekdays before `today`. Oldest first.
+ */
+export function demoEntries(today: string): DemoEntry[] {
   const dates: string[] = [];
   let cursor = addDays(today, -1);
   while (dates.length < SAMPLES.length) {
@@ -147,5 +154,6 @@ export function demoEntries(today: string): { date: string; raw: string; data: E
     if (weekday !== 0 && weekday !== 6) dates.unshift(cursor);
     cursor = addDays(cursor, -1);
   }
-  return SAMPLES.map((s, i) => ({ date: dates[i], ...s }));
+  const recent = SAMPLES.map((s, i) => ({ date: dates[i], ...s }));
+  return [...demoHistory(addDays(today, -HISTORY_DAYS), dates[0]), ...recent];
 }

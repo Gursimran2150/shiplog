@@ -27,7 +27,9 @@ async function demoPage(options = DESKTOP, { video, skipTour = true } = {}) {
   await page.getByRole("button", { name: /Account with mock data/ }).click();
   await page.waitForURL(`${BASE}/`);
   if (skipTour) {
+    const saved = page.waitForResponse((r) => r.url().endsWith("/api/settings") && r.request().method() === "PUT");
     await page.getByRole("button", { name: "Skip tour" }).click();
+    await saved;
     await page.getByRole("dialog").waitFor({ state: "hidden" });
   }
   return { context, page };
@@ -62,6 +64,11 @@ if (!process.env.FROM_STEP || process.env.FROM_STEP <= "1") {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.waitForTimeout(300);
   await shot(page, "landing-dark");
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.getByRole("button", { name: /Try the demo/ }).click();
+  await page.getByRole("dialog").waitFor();
+  await page.waitForTimeout(500);
+  await shot(page, "demo-chooser");
   await context.close();
 }
 
@@ -114,8 +121,16 @@ if (!process.env.FROM_STEP || process.env.FROM_STEP <= "3") {
   await answer.and(page.locator('[aria-busy="false"]')).waitFor({ timeout: 60_000 });
   await page.waitForTimeout(800);
   await shot(page, "reports-standup", true);
+  await page.getByRole("tab", { name: "Weekly report" }).click();
+  await page.waitForTimeout(500);
+  await page.getByRole("button", { name: /Previous week/i }).click();
+  await page.getByRole("button", { name: /Generate weekly report/ }).click();
+  await answer.and(page.locator('[aria-busy="false"]')).waitFor({ timeout: 60_000 });
+  await page.waitForTimeout(800);
+  await shot(page, "reports-weekly", true);
   await page.getByRole("tab", { name: "Brag doc" }).click();
   await page.waitForTimeout(600);
+  await page.getByText("Last 6 months").click();
   await page.getByRole("button", { name: /Generate brag doc/ }).click();
   await answer.and(page.locator('[aria-busy="false"]')).waitFor({ timeout: 60_000 });
   await page.waitForTimeout(800);
@@ -146,6 +161,10 @@ if (!process.env.FROM_STEP || process.env.FROM_STEP <= "3") {
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(600);
   await shot(page, "settings", true);
+  const integrations = page.getByRole("heading", { name: /GitHub/ }).first();
+  await integrations.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(400);
+  await shot(page, "settings-connect");
 
   await page.keyboard.press("Meta+k");
   await page.waitForTimeout(500);

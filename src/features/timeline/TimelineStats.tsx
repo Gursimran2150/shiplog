@@ -39,8 +39,8 @@ export function TimelineStats({ period, periodLoading, topProject, weekLoading }
   return (
     <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <StatCard label="Current streak" value={`${period.streak}d`} hint="Weekdays in a row" loading={periodLoading} />
-      <StatCard label="Days logged" value={period.daysLogged} hint="Last 26 weeks" loading={periodLoading} />
-      <StatCard label="Items shipped" value={period.items} hint="Last 26 weeks" loading={periodLoading} />
+      <StatCard label="Days logged" value={period.daysLogged} hint="Last 12 months" loading={periodLoading} />
+      <StatCard label="Items shipped" value={period.items} hint="Last 12 months" loading={periodLoading} />
       <StatCard
         label="Top project"
         value={topProject?.name ?? "—"}
