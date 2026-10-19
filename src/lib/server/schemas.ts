@@ -51,6 +51,9 @@ export const structuredLogSchema = entryDataSchema.extend({
     ),
 });
 
+/** One-tap demo: "mock" comes with two weeks of sample logs, "empty" starts from a blank journal. */
+export const demoRequest = z.object({ data: z.enum(["mock", "empty"]) });
+
 export const refineEntryRequest = z.object({
   answers: z
     .array(z.object({ question: z.string().trim().min(1).max(160), answer: z.string().trim().min(1).max(1000) }))

@@ -6,6 +6,7 @@ export const STORAGE_STATE = "e2e/.auth/demo.json";
 setup("log in as a demo user", async ({ page }) => {
   await page.goto("/login");
   await page.getByRole("button", { name: /Try the demo/i }).click();
+  await page.getByRole("button", { name: /Account with mock data/ }).click();
   await page.waitForURL("/");
   await expect(page.getByRole("dialog", { name: "Welcome to ShipLog" })).toBeVisible();
   const saved = page.waitForResponse((r) => r.url().endsWith("/api/settings") && r.request().method() === "PUT");

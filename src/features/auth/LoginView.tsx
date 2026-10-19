@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Loader2, Mic } from "lucide-react";
+import { Loader2, Mic } from "lucide-react";
 import { useId, useState, type ChangeEvent, type FormEvent } from "react";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api, ApiError } from "@/lib/api-client";
 import { hardNavigate } from "@/lib/navigation";
+import { DemoChooser, type DemoData } from "./DemoChooser";
 
 type Mode = "login" | "signup";
-type Busy = null | "form" | "demo";
+type Busy = null | "form" | DemoData;
 
 const STEPS = [
   { title: "Speak your day", body: "Hold your Wispr Flow key and ramble — Hinglish welcome." },
@@ -86,19 +87,14 @@ export function LoginView() {
             {mode === "login" ? "Log in to ShipLog" : "Create your account"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Judges and first-timers: try the demo, no sign-up needed.
+            Judges and first-timers: try the demo — with mock data or a fresh account, no sign-up needed.
           </p>
 
-          <Button
-            type="button"
-            onClick={() => void enter(() => api.post("/api/auth/demo"), "demo")}
-            disabled={busy !== null}
-            className="mt-6 h-11 w-full rounded-full text-sm font-medium"
-          >
-            {busy === "demo" ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-            Try the demo
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Button>
+          <DemoChooser
+            busy={busy === "mock" || busy === "empty" ? busy : null}
+            disabled={busy === "form"}
+            onPick={(data) => void enter(() => api.post("/api/auth/demo", { data }), data)}
+          />
 
           <div className="my-6 flex items-center gap-3 font-mono text-xs text-muted-foreground">
             <span className="h-px flex-1 bg-border" />

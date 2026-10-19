@@ -7,12 +7,14 @@ import { localDate } from "@/lib/domain/dates";
 import { getEnv } from "@/lib/env";
 import { jsonError } from "@/lib/security/http";
 import { demoEntries } from "@/lib/server/demo-data";
+import { demoRequest } from "@/lib/server/schemas";
 
 /**
- * One-tap demo: creates a fresh, isolated account (evaluators never see each other's data)
- * pre-filled with two weeks of sample logs so reports and search work immediately.
+ * One-tap demo: creates a fresh, isolated account (evaluators never see each other's data).
+ * "mock" pre-fills two weeks of sample logs so the timeline, reports and search work immediately;
+ * "empty" starts blank so you can try ShipLog with your own day.
  */
-export const POST = publicRoute({ rateLimit: true }, async () => {
+export const POST = publicRoute({ body: demoRequest, rateLimit: true }, async ({ body }) => {
   const id = randomBytes(6).toString("hex");
   const user = await createUser({
     email: `demo-${id}@demo.shiplog.dev`,
@@ -24,9 +26,9 @@ export const POST = publicRoute({ rateLimit: true }, async () => {
 
   const env = getEnv();
   await Promise.all([
-    insertEntries(user.id, demoEntries(localDate(new Date(), "Asia/Kolkata"))),
+    body.data === "mock" && insertEntries(user.id, demoEntries(localDate(new Date(), "Asia/Kolkata"))),
     saveSettings(user.id, {
-      githubUsername: env.DEMO_GITHUB_USERNAME ?? null,
+      githubUsername: body.data === "mock" ? (env.DEMO_GITHUB_USERNAME ?? null) : null,
       standupFormat: "slack",
       onboarded: false,
     }),

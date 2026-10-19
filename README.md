@@ -48,11 +48,11 @@ It's built for one person's own workflow: frontend, backend or full-stack engine
 
 ## 🚀 Try it now (no sign-up)
 
-| Option                         | How                                                                                                                                                                                                                          |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **One-tap demo** (recommended) | Open **[shiplog-voice.vercel.app](https://shiplog-voice.vercel.app)** and click **"Try the demo"**. You get a private account pre-filled with two weeks of sample logs, so reports, the timeline and search work right away. |
-| **Shared demo login**          | `demo@shiplog.dev` / `shiplog-demo-2026`                                                                                                                                                                                     |
-| **Your own account**           | Click **"New here? Create an account"**.                                                                                                                                                                                     |
+| Option                         | How                                                                                                                                                                                                                                                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **One-tap demo** (recommended) | Open **[shiplog-voice.vercel.app](https://shiplog-voice.vercel.app)** and click **"Try the demo"**, then pick **"Account with mock data"** (two weeks of sample logs, so the timeline, reports and search work right away) or **"Fresh empty account"** (start blank and log your own day). Both are private. |
+| **Shared demo login**          | `demo@shiplog.dev` / `shiplog-demo-2026`                                                                                                                                                                                                                                                                      |
+| **Your own account**           | Click **"New here? Create an account"**.                                                                                                                                                                                                                                                                      |
 
 <p align="center"><img src="docs/screenshots/landing.png" width="880" alt="ShipLog landing and login page" /></p>
 

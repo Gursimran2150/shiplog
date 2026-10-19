@@ -30,3 +30,14 @@ test("shared demo credentials work", async ({ page }) => {
   await page.getByRole("button", { name: "Log in", exact: true }).click();
   await page.waitForURL("/");
 });
+
+test("the demo chooser offers a mock-data account and a fresh empty one", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByRole("button", { name: /Try the demo/ }).click();
+  const chooser = page.getByRole("dialog", { name: "How do you want to try ShipLog?" });
+  await expect(chooser.getByRole("button", { name: /Account with mock data/ })).toBeVisible();
+  await chooser.getByRole("button", { name: /Fresh empty account/ }).click();
+  await page.waitForURL("/");
+  const res = await page.request.get("/api/entries?from=2020-01-01&to=2030-12-31");
+  expect((await res.json()).entries).toEqual([]);
+});

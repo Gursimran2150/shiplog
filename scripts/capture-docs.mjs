@@ -24,6 +24,7 @@ async function demoPage(options = DESKTOP, { video, skipTour = true } = {}) {
   const page = await context.newPage();
   await page.goto(`${BASE}/login`);
   await page.getByRole("button", { name: /Try the demo/ }).click();
+  await page.getByRole("button", { name: /Account with mock data/ }).click();
   await page.waitForURL(`${BASE}/`);
   if (skipTour) {
     await page.getByRole("button", { name: "Skip tour" }).click();

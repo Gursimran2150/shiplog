@@ -6,6 +6,7 @@ test.describe("first-run tour", () => {
   test("walks through setup, saves GitHub and format, and does not show again", async ({ page }) => {
     await page.goto("/login");
     await page.getByRole("button", { name: /Try the demo/i }).click();
+    await page.getByRole("button", { name: /Account with mock data/ }).click();
     await page.waitForURL("/");
 
     const tour = page.getByRole("dialog");
@@ -75,6 +76,7 @@ test.describe("account deletion", () => {
   test("requires typing DELETE and then signs the user out", async ({ page }) => {
     await page.goto("/login");
     await page.getByRole("button", { name: /Try the demo/i }).click();
+    await page.getByRole("button", { name: /Account with mock data/ }).click();
     await page.waitForURL("/");
     const saved = page.waitForResponse((r) => r.url().endsWith("/api/settings") && r.request().method() === "PUT");
     await page.getByRole("button", { name: "Skip tour" }).click();
