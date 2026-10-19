@@ -1,15 +1,15 @@
 "use client";
 
 import { Mic, Square } from "lucide-react";
-import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useSpeechDictation } from "@/hooks/useSpeechDictation";
 import { cn } from "@/lib/utils";
 
-const LANGS = [
-  { value: "en-IN", label: "English" },
-  { value: "hi-IN", label: "हिन्दी" },
-] as const;
+/**
+ * The Web Speech API can't auto-detect the spoken language; it needs one up front. Indian English
+ * copes with English, Hinglish and Indian names, which is how engineers here actually talk.
+ */
+const LANG = "en-IN";
 
 interface MicButtonProps {
   /** Receives each finalised phrase; usually `append` from useDictationField. */
@@ -23,9 +23,7 @@ interface MicButtonProps {
  * Web Speech API (e.g. Firefox), so it never shows a control that can't work.
  */
 export function MicButton({ onText, disabled, className }: MicButtonProps) {
-  const langId = useId();
-  const [lang, setLang] = useState<string>(LANGS[0].value);
-  const { supported, listening, interim, error, start, stop } = useSpeechDictation(lang, onText);
+  const { supported, listening, interim, error, start, stop } = useSpeechDictation(LANG, onText);
 
   if (!supported) return null;
 
@@ -55,22 +53,6 @@ export function MicButton({ onText, disabled, className }: MicButtonProps) {
             </>
           )}
         </Button>
-        <label htmlFor={langId} className="sr-only">
-          Dictation language
-        </label>
-        <select
-          id={langId}
-          value={lang}
-          onChange={(e) => setLang(e.target.value)}
-          disabled={listening || disabled}
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {LANGS.map((l) => (
-            <option key={l.value} value={l.value}>
-              {l.label}
-            </option>
-          ))}
-        </select>
       </div>
       <p aria-live="polite" className="min-h-4 text-xs text-muted-foreground">
         {error ? (
