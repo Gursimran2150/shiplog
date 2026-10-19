@@ -2,7 +2,7 @@
 
 > A voice-first work journal for software engineers. Hold your **Wispr Flow** key, ramble about your day for 30 seconds (Hinglish welcome), and ShipLog turns it into a clean log, cross-checks it against your GitHub commits, and writes your **standup**, **weekly report** and **appraisal brag doc**.
 
-**Live:** https://SHIPLOG-URL · **Demo video:** https://VIDEO-LINK
+**Live:** https://shiplog-voice.vercel.app · **Demo video:** https://VIDEO-LINK
 
 ## Try it (no sign-up)
 
