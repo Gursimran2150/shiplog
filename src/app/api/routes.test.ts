@@ -28,6 +28,8 @@ vi.mock("@/lib/auth/session", async (orig) => ({
   requireUser: async () => ({ ok: true, user: USER }),
 }));
 vi.mock("@/lib/db/repo", () => repo);
+const tasks = { openTasks: vi.fn(), insertTasks: vi.fn() };
+vi.mock("@/lib/db/tasks", () => tasks);
 vi.mock("@/lib/ai/provider", () => ({ getModel: () => getModel() }));
 vi.mock("@/lib/server/github", async (orig) => ({
   ...(await orig<typeof import("@/lib/server/github")>()),
@@ -69,7 +71,11 @@ const post = (url: string, body: unknown) =>
 
 const data = {
   summary: "Fixed login",
-  done: [{ text: "Fixed login redirect", project: "auth" }],
+  done: [{ text: "Fixed login redirect", project: "auth" }] as {
+    text: string;
+    project: string | null;
+    taskId?: string;
+  }[],
   inProgress: [],
   blockers: [],
   tomorrow: [],
@@ -81,6 +87,9 @@ describe("POST /api/entries", () => {
     vi.resetModules();
     vi.clearAllMocks();
     repo.getSettings.mockResolvedValue({ githubUsername: "octo", standupFormat: "slack" });
+    tasks.openTasks.mockResolvedValue([
+      { id: "6f1c2c1e-0000-4000-8000-00000000aaaa", title: "Login redirect", project: "auth", status: "in_progress" },
+    ]);
     repo.createEntry.mockImplementation(async (_u, input) => ({ ...entry, ...input }));
     fetchActivity.mockResolvedValue([
       {
@@ -97,6 +106,8 @@ describe("POST /api/entries", () => {
     getModel.mockReturnValue({
       model: jsonModel({
         ...data,
+        done: [{ text: "Fixed login redirect", project: "auth", task: "t1" }],
+        tomorrow: [{ text: "Dashboard charts", project: "dashboard", task: "new" }],
         missed: [
           { text: "Add charts", url: "https://github.com/acme/web/commit/1" },
           { text: "Invented", url: "https://github.com/evil/x/commit/9" },
@@ -113,6 +124,11 @@ describe("POST /api/entries", () => {
     expect(body.missed).toEqual([{ text: "Add charts", url: "https://github.com/acme/web/commit/1" }]);
     expect(body.followUps).toEqual(["Is the login fix deployed yet?"]);
     expect(body.entry.data).not.toHaveProperty("followUps");
+    // The model's "t1" became the real task id; "new" created a task first.
+    expect(body.entry.data.done[0].taskId).toBe("6f1c2c1e-0000-4000-8000-00000000aaaa");
+    expect(tasks.insertTasks).toHaveBeenCalledWith(USER.id, [
+      { id: body.entry.data.tomorrow[0].taskId, title: "Dashboard charts", project: "dashboard" },
+    ]);
     expect(repo.createEntry).toHaveBeenCalledWith(USER.id, expect.objectContaining({ date: "2026-10-20", words: 4 }));
     expect(fetchActivity).toHaveBeenCalledWith("octo", "2026-10-20", "2026-10-20", "Asia/Kolkata");
   });
@@ -137,17 +153,19 @@ describe("POST /api/entries/[id]/refine", () => {
     vi.resetModules();
     vi.clearAllMocks();
     repo.getEntry.mockResolvedValue({ ...entry, id: ID });
+    tasks.openTasks.mockResolvedValue([]);
     repo.updateEntryData.mockImplementation(async (_u, id, d) => ({ ...entry, id, data: d }));
   });
 
   it("folds the answers into the saved entry", async () => {
-    const refined = { ...data, blockers: [{ text: "Usage API — waiting on Rahul since Monday", project: null }] };
+    const blocker = { text: "Usage API — waiting on Rahul since Monday", project: null };
+    const refined = { ...data, done: [{ ...data.done[0], task: null }], blockers: [{ ...blocker, task: null }] };
     getModel.mockReturnValue({ model: jsonModel(refined) });
     const res = await call(ID, { answers });
     expect(res.status).toBe(200);
     expect((await res.json()).entry.data.blockers[0].text).toContain("Rahul");
     expect(repo.getEntry).toHaveBeenCalledWith(USER.id, ID);
-    expect(repo.updateEntryData).toHaveBeenCalledWith(USER.id, ID, refined);
+    expect(repo.updateEntryData).toHaveBeenCalledWith(USER.id, ID, { ...data, blockers: [blocker] });
   });
 
   it("rejects bad ids, empty answers and other users' entries without calling the model", async () => {

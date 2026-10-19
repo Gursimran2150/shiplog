@@ -11,6 +11,12 @@ export const COMMANDS: readonly Command[] = [
   { id: "go:/", label: "Log today's work", group: "Create", keywords: "today speak dictate wispr entry" },
   { id: "go:/reports", label: "Generate a standup or report", group: "Create", keywords: "standup weekly brag doc" },
   { id: "go:/ask", label: "Ask your journal", group: "Create", keywords: "question search history" },
+  {
+    id: "go:/journeys",
+    label: "Open task journeys",
+    group: "Navigate",
+    keywords: "tasks tree history blockers notes learnings fixed",
+  },
   { id: "go:/timeline", label: "Go to Timeline", group: "Navigate", keywords: "heatmap streak calendar history" },
   { id: "go:/settings", label: "Go to Settings", group: "Navigate", keywords: "github format account" },
   { id: "theme:light", label: "Switch to light theme", group: "Preferences" },

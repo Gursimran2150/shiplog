@@ -22,9 +22,13 @@ const EMPTY_DAYS: DayCount[] = [];
 const EMPTY_ACTIVITY: Activity[] = [];
 const DEFAULT_SETTINGS: Settings = { githubUsername: null, standupFormat: "slack", onboarded: true };
 
-/** SWR keys are plain URLs; this matches every cached entries/stats range so one save refreshes them all. */
-const isJournalKey = (key: unknown) =>
-  typeof key === "string" && (key.startsWith("/api/entries") || key.startsWith("/api/stats"));
+/**
+ * SWR keys are plain URLs; this matches every cached entries/stats range and task journey
+ * (tasks are derived from the logs) so one save refreshes them all.
+ */
+export const isJournalKey = (key: unknown) =>
+  typeof key === "string" &&
+  (key.startsWith("/api/entries") || key.startsWith("/api/stats") || key.startsWith("/api/tasks"));
 
 /** The logged-in user (from the session cookie). */
 export function useSession() {

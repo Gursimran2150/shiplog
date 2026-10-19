@@ -2,10 +2,9 @@ import { publicRoute } from "@/lib/api/route";
 import { verifyPassword } from "@/lib/auth/password";
 import { loginSchema } from "@/lib/auth/schemas";
 import { sessionCookie } from "@/lib/auth/session";
-import { findUserByEmail, insertEntries, recentEntries } from "@/lib/db/repo";
-import { localDate } from "@/lib/domain/dates";
+import { findUserByEmail, recentEntries } from "@/lib/db/repo";
 import { jsonError } from "@/lib/security/http";
-import { demoEntries } from "@/lib/server/demo-data";
+import { seedDemoJournal } from "@/lib/server/demo-seed";
 
 export const POST = publicRoute({ rateLimit: true, body: loginSchema }, async ({ body }) => {
   const user = await findUserByEmail(body.email);
@@ -15,7 +14,7 @@ export const POST = publicRoute({ rateLimit: true, body: loginSchema }, async ({
   }
   // The shared demo login comes with the same sample journal as one-tap demos.
   if (user.is_demo && !(await recentEntries(user.id, 1)).length) {
-    await insertEntries(user.id, demoEntries(localDate(new Date(), "Asia/Kolkata")));
+    await seedDemoJournal(user.id);
   }
   const session = { id: user.id, name: user.name, email: user.email, isDemo: user.is_demo };
   return Response.json({ user: session }, { headers: { "Set-Cookie": await sessionCookie(session) } });

@@ -2,11 +2,10 @@ import { randomBytes } from "node:crypto";
 import { publicRoute } from "@/lib/api/route";
 import { hashPassword } from "@/lib/auth/password";
 import { sessionCookie } from "@/lib/auth/session";
-import { createUser, insertEntries, saveSettings } from "@/lib/db/repo";
-import { localDate } from "@/lib/domain/dates";
+import { createUser, saveSettings } from "@/lib/db/repo";
 import { getEnv } from "@/lib/env";
 import { jsonError } from "@/lib/security/http";
-import { demoEntries } from "@/lib/server/demo-data";
+import { seedDemoJournal } from "@/lib/server/demo-seed";
 import { demoRequest } from "@/lib/server/schemas";
 
 /**
@@ -26,7 +25,7 @@ export const POST = publicRoute({ body: demoRequest, rateLimit: true }, async ({
 
   const env = getEnv();
   await Promise.all([
-    body.data === "mock" && insertEntries(user.id, demoEntries(localDate(new Date(), "Asia/Kolkata"))),
+    body.data === "mock" && seedDemoJournal(user.id),
     saveSettings(user.id, {
       githubUsername: body.data === "mock" ? (env.DEMO_GITHUB_USERNAME ?? null) : null,
       standupFormat: "slack",

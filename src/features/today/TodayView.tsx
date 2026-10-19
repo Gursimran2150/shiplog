@@ -26,10 +26,8 @@ export function TodayView() {
   const today = useToday();
   const timeZone = useTimeZone();
   const { entries, isLoading } = useEntries(today, today);
-  const { result, submitting, error, submit, addMissed, editResult, refine, dismissFollowUps, forget } = useDayLog(
-    today,
-    timeZone,
-  );
+  const { result, submitting, error, submit, addMissed, editResult, replaceEntry, refine, dismissFollowUps, forget } =
+    useDayLog(today, timeZone, entries[0] ?? null);
   const wordsToday = useMemo(() => entries.reduce((sum, e) => sum + e.words, 0), [entries]);
   const saved = useMemo(() => result && { words: result.entry.words, items: itemCount(result.entry.data) }, [result]);
 
@@ -53,7 +51,7 @@ export function TodayView() {
             <SectionsSkeleton />
           ) : (
             result && (
-              <StructuredResult entry={result.entry} onEdit={editResult}>
+              <StructuredResult entry={result.entry} fresh={result.fresh} onEdit={editResult} onLinked={replaceEntry}>
                 <FollowUpPanel questions={result.followUps} onAnswer={refine} onSkip={dismissFollowUps} />
                 <MissedPanel missed={result.missed} onAdd={addMissed} />
               </StructuredResult>

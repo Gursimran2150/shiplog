@@ -4,13 +4,13 @@ import type { LogItem, Section } from "@/lib/domain/types";
 import { SectionCard } from "./SectionCard";
 
 const items: LogItem[] = [
-  { text: "Staging deploy blocked", project: "infra" },
+  { text: "Staging deploy blocked", project: "infra", taskId: "6f1c2c1e-0000-4000-8000-0000000000aa" },
   { text: "Waiting on API keys", project: null },
 ];
 
 function setup(section: Section = "blockers") {
-  const handlers = { onCreateTicket: vi.fn(), onUpdate: vi.fn(), onRemove: vi.fn(), onAdd: vi.fn() };
-  render(<SectionCard section={section} items={items} {...handlers} />);
+  const handlers = { onCreateTicket: vi.fn(), onUpdate: vi.fn(), onRemove: vi.fn(), onAdd: vi.fn(), onLinked: vi.fn() };
+  render(<SectionCard section={section} items={items} entryId="e1" {...handlers} />);
   return handlers;
 }
 
@@ -62,5 +62,16 @@ describe("SectionCard inline editing", () => {
     setup("done");
     expect(screen.getByRole("heading", { name: /Done/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Create ticket/ })).not.toBeInTheDocument();
+  });
+
+  it("links tracked items to their journey and offers to move or track any item", () => {
+    setup();
+    expect(screen.getByRole("link", { name: "See journey: Staging deploy blocked" })).toHaveAttribute(
+      "href",
+      "/journeys?task=6f1c2c1e-0000-4000-8000-0000000000aa",
+    );
+    expect(screen.queryByRole("link", { name: "See journey: Waiting on API keys" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Track as a task: Waiting on API keys" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Move to another task: Staging deploy blocked" })).toBeInTheDocument();
   });
 });

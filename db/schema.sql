@@ -63,3 +63,25 @@ CREATE TABLE IF NOT EXISTS bitbucket_connections (
   excluded_repos text[] NOT NULL DEFAULT '{}',
   created_at     timestamptz NOT NULL DEFAULT now()
 );
+
+-- Tasks followed across days ("journeys"). Log items point at a task with data->section[i]->>'taskId';
+-- status and dates are derived from those logs, so there is nothing to keep in sync.
+CREATE TABLE IF NOT EXISTS tasks (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title      text NOT NULL,
+  project    text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS tasks_user_idx ON tasks (user_id);
+
+-- What the engineer wrote down about a task: how it was fixed, what they learned.
+CREATE TABLE IF NOT EXISTS task_notes (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  task_id    uuid NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind       text NOT NULL CHECK (kind IN ('fix', 'learning', 'note')),
+  body       text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS task_notes_task_idx ON task_notes (task_id, created_at);

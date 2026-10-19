@@ -1,3 +1,4 @@
+import { JourneyLink } from "@/features/journeys/JourneyLink";
 import { SECTIONS, SECTION_LABELS, type EntryData } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
 import { ProjectBadge } from "./ProjectBadge";
@@ -24,6 +25,7 @@ export function EntrySections({ data }: { data: EntryData }) {
                   <li key={i} className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span>{item.text}</span>
                     <ProjectBadge project={item.project} />
+                    {item.taskId && <JourneyLink taskId={item.taskId} text={item.text} />}
                   </li>
                 ))}
               </ul>

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const PAGES = ["/", "/timeline", "/reports", "/ask", "/settings"];
+const PAGES = ["/", "/timeline", "/journeys", "/reports", "/ask", "/settings"];
 
 for (const path of PAGES) {
   test(`${path} renders with a main landmark and a heading`, async ({ page }) => {

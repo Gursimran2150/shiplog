@@ -10,20 +10,24 @@ import { useTicket } from "./useTicket";
 
 interface StructuredResultProps {
   entry: Entry;
+  /** Just structured: move focus to the heading. (A log restored on arrival leaves focus alone.) */
+  fresh: boolean;
   onEdit: (change: (data: EntryData) => EntryData) => void;
+  /** An item was moved to another task (saved on the server): show the returned entry. */
+  onLinked: (entry: Entry) => void;
   /** Panels that refine the entry (follow-up questions, missed GitHub work), shown above Next steps. */
   children?: ReactNode;
 }
 
 /** The freshly structured entry as four editable cards. Focus moves to its heading when a new entry arrives. */
-export function StructuredResult({ entry, onEdit, children }: StructuredResultProps) {
+export function StructuredResult({ entry, fresh, onEdit, onLinked, children }: StructuredResultProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
   const { state, draft, close } = useTicket(entry.data.summary);
 
   useEffect(() => {
-    headingRef.current?.focus();
-  }, [entry.id]);
+    if (fresh) headingRef.current?.focus();
+  }, [entry.id, fresh]);
 
   const onUpdate = useCallback(
     (section: Section, index: number, text: string) => onEdit((data) => updateItem(data, section, index, text)),
@@ -69,6 +73,8 @@ export function StructuredResult({ entry, onEdit, children }: StructuredResultPr
             key={section}
             section={section}
             items={entry.data[section]}
+            entryId={entry.id}
+            onLinked={onLinked}
             onCreateTicket={draft}
             onUpdate={onUpdate}
             onRemove={onRemove}

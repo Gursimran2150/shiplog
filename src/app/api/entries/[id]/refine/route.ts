@@ -7,7 +7,8 @@ import { aiCallSettings } from "@/lib/ai/settings";
 import { getEntry, updateEntryData } from "@/lib/db/repo";
 import { jsonError } from "@/lib/security/http";
 import { refinePrompt } from "@/lib/server/prompts";
-import { entryDataSchema, refineEntryRequest } from "@/lib/server/schemas";
+import { aiEntrySchema, clampEntry, refineEntryRequest } from "@/lib/server/schemas";
+import { entryWithAliases, linkTasks, openTaskAliases, withEntryTasks } from "@/lib/server/task-links";
 
 export const maxDuration = 30;
 
@@ -20,14 +21,16 @@ export const POST = userRoute(
     const entry = await getEntry(user.id, id);
     if (!entry) return jsonError(404, "Entry not found.");
 
+    const open = await openTaskAliases(user.id, entry.date);
+    const aliases = withEntryTasks(open.aliases, entry.data);
     try {
       const { output } = await generateText({
         model: getModel().model,
-        ...refinePrompt(entry.data, body.answers),
-        output: Output.object({ schema: entryDataSchema }),
+        ...refinePrompt(entryWithAliases(entry.data, aliases), body.answers, open.text),
+        output: Output.object({ schema: aiEntrySchema }),
         ...aiCallSettings(request, "structure"),
       });
-      const updated = await updateEntryData(user.id, id, output);
+      const updated = await updateEntryData(user.id, id, await linkTasks(user.id, clampEntry(output), aliases));
       return updated ? Response.json({ entry: updated }, { headers: NO_STORE }) : jsonError(404, "Entry not found.");
     } catch (error) {
       return aiErrorResponse(error);

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const PAGES = ["/", "/timeline", "/reports", "/ask", "/settings"];
+const PAGES = ["/", "/timeline", "/journeys", "/reports", "/ask", "/settings"];
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
 /** Automated WCAG 2.1 A/AA scan of every screen, in light and dark themes. */

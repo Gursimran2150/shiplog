@@ -1,5 +1,5 @@
 import { memo, useId } from "react";
-import { SECTION_LABELS, type LogItem, type Section } from "@/lib/domain/types";
+import { SECTION_LABELS, type Entry, type LogItem, type Section } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
 import { AddItem } from "./AddItem";
 import { EditableItem } from "./EditableItem";
@@ -8,6 +8,8 @@ import { SECTION_META, TICKETABLE } from "./sections";
 interface SectionCardProps {
   section: Section;
   items: LogItem[];
+  entryId: string;
+  onLinked: (entry: Entry) => void;
   onCreateTicket: (text: string) => void;
   onUpdate: (section: Section, index: number, text: string) => void;
   onRemove: (section: Section, index: number) => void;
@@ -18,6 +20,8 @@ interface SectionCardProps {
 export const SectionCard = memo(function SectionCard({
   section,
   items,
+  entryId,
+  onLinked,
   onCreateTicket,
   onUpdate,
   onRemove,
@@ -43,6 +47,10 @@ export const SectionCard = memo(function SectionCard({
               // Text in the key resets an open editor if the list shifts under it (e.g. after a remove).
               key={`${i}:${item.text}`}
               item={item}
+              entryId={entryId}
+              section={section}
+              index={i}
+              onLinked={onLinked}
               ticketable={TICKETABLE.has(section)}
               onCreateTicket={onCreateTicket}
               onSave={(text) => onUpdate(section, i, text)}

@@ -60,7 +60,7 @@ It's built for one person's own workflow: frontend, backend or full-stack engine
 
 ### What's in the mock-data account
 
-A fictional frontend engineer's journal: **~340 working days over 18 months**, one log a day, written the way people actually talk (Hinglish). They work through 16 projects (design system, auth, checkout, dashboard, performance, billing, i18n, editor…), with code reviews, on-call, interviews and production bugs in between. Blockers come up and get resolved ("waiting on Rahul for the usage API"), each project ends with a measurable result ("conversion up 9%"), and there are weekends, holidays, a week of leave and the odd forgotten day. The heatmap, streaks, weekly reports, 6-month brag doc and Ask all have real history to work from. Every report and answer is still a live AI call.
+A fictional frontend engineer's journal: **~340 working days over 18 months**, one log a day, written the way people actually talk (Hinglish). They work through 16 projects (design system, auth, checkout, dashboard, performance, billing, i18n, editor…), with code reviews, on-call, interviews and production bugs in between. Blockers come up and get resolved ("waiting on Rahul for the usage API"), each project ends with a measurable result ("conversion up 9%"), and there are weekends, holidays, a week of leave and the odd forgotten day. Each project task is tracked as a **journey** (with "how it was fixed" notes and learnings on the blocked ones), and there's already a **log for today**, so the Today page opens with your day structured. The heatmap, streaks, journeys, weekly reports, 6-month brag doc and Ask all have real history to work from. Every report and answer is still a live AI call.
 
 ---
 
@@ -86,6 +86,8 @@ Not sure what to say? Tap the hints under the box (_What you finished · What's 
 
 ShipLog writes clean English in four sections, keeping your project names and numbers. Anything off? **Edit ✏️, remove ✕ or "+ Add item"**. Changes save automatically.
 
+- **Journey / Move** on every item: ShipLog links each piece of work to the task it continues (the blocker on Tuesday and the fix on Friday are one task). **Journey** opens that task's history; **Move** fixes a wrong link, starts a new task, or marks it as routine work.
+- **A few quick questions:** if a blocker or item is vague, ShipLog asks up to 3 follow-ups (who are you waiting on? since when?). Answer by voice and it updates the log.
 - **Missed from GitHub** lists commits and PRs you pushed today but didn't mention. **Add to Done** puts them in your log.
 - **Create ticket** on any blocker or to-do drafts a GitHub issue with acceptance criteria, which you can open pre-filled on GitHub.
 - **Today on GitHub** (right) shows your activity across connected repos.
@@ -94,11 +96,11 @@ ShipLog writes clean English in four sections, keeping your project names and nu
 
 ### Step 4: Generate your updates (Reports)
 
-| When           | Tab               | What you get                                                                                      |
-| -------------- | ----------------- | ------------------------------------------------------------------------------------------------- |
-| Every morning  | **Standup**       | Yesterday / Today / Blockers, formatted for Slack, Teams or plain text. Click **Copy** and paste. |
-| Every Friday   | **Weekly report** | Highlights, Shipped, In progress, Blockers & risks, Next week, for your manager.                  |
-| Appraisal time | **Brag doc**      | Your work over 30 days, a quarter or 6 months, grouped by project, with impact. **Download .md**. |
+| When           | Tab               | What you get                                                                                                                                        |
+| -------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Every morning  | **Standup**       | Yesterday / Today / Blockers, formatted for Slack, Teams or plain text. Click **Copy** and paste.                                                   |
+| Every Friday   | **Weekly report** | Highlights, Shipped, In progress, Blockers & risks, Next week, for your manager. Pick any past week from the calendar (days you logged are marked). |
+| Appraisal time | **Brag doc**      | Your work over 30 days, a quarter or 6 months, grouped by project, with impact. **Download .md**.                                                   |
 
 Reopen a report on unchanged logs and it comes back instantly as **"Saved report"**, with no new AI call.
 
@@ -110,13 +112,24 @@ Reopen a report on unchanged logs and it comes back instantly as **"Saved report
 <td><img src="docs/screenshots/reports-weekly.png" alt="Weekly report for last week" /></td>
 </tr>
 <tr>
-<td colspan="2"><img src="docs/screenshots/reports-brag.png" alt="Six-month brag doc grouped by project, with impact" /></td>
+<td><img src="docs/screenshots/reports-week-picker.png" alt="Week picker calendar with logged days marked and shortcuts for recent weeks" /></td>
+<td><img src="docs/screenshots/reports-brag.png" alt="Six-month brag doc grouped by project, with impact" /></td>
 </tr>
 </table>
 
-### Step 5: Look back (Timeline & Ask)
+### Step 5: Follow a task from start to shipped (Journeys)
 
-- **Timeline:** a contribution heatmap of every day you logged, with your streak, items shipped and top project. Click a day (or use the arrow keys) to see that week.
+**Journeys** shows every task as a tree, **project → tasks**, each with its status (planned, in progress, blocked, done). Pick one to see how it went, day by day: **Started → In progress → Blocked (on whom) → Unblocked → Milestone → Done**, with how long it took and how many days it was blocked. Below that, keep **notes**: _How it was fixed_, _Learning_ or a plain _Note_. You can dictate them too.
+
+- Open it from the **Journeys** tab, from **Journey** on any log item (Today and Timeline), from **Task journeys** after you log, or with **⌘K → "Open task journeys"**.
+- ShipLog's AI links new log items to your open tasks as you log, even when you word things differently. Wrong link? Use **Move**.
+- Search and filter (Open / Blocked / Done) to find, say, every blocker you hit this quarter and how each one got fixed.
+
+<p align="center"><img src="docs/screenshots/journeys.png" width="880" alt="Journeys: project tree on the left; the usage API task's timeline (blocked, milestone, done) and its notes on the right" /></p>
+
+### Step 6: Look back (Timeline & Ask)
+
+- **Timeline:** a contribution heatmap of the last 12 months, with your streak, items shipped and top project. Click a day (or use the arrow keys) to see that week.
 - **Ask your journal:** _"When did I last work on onboarding?"_ or _"What blockers did I have this month?"_. Answers come only from your own entries, with dates.
 
 <table>
@@ -126,7 +139,7 @@ Reopen a report on unchanged logs and it comes back instantly as **"Saved report
 </tr>
 </table>
 
-### Step 6: Move fast
+### Step 7: Move fast
 
 - `⌘K` / `Ctrl K` opens the command menu: jump anywhere, generate reports, switch theme, replay the tour.
 - `?` lists every keyboard shortcut.
@@ -143,6 +156,7 @@ Reopen a report on unchanged logs and it comes back instantly as **"Saved report
 <img src="docs/screenshots/mobile-tour.png" width="250" alt="Mobile: welcome tour" />
 <img src="docs/screenshots/mobile-today.png" width="250" alt="Mobile: structured log" />
 <img src="docs/screenshots/mobile-timeline.png" width="250" alt="Mobile: timeline" />
+<img src="docs/screenshots/mobile-journeys.png" width="250" alt="Mobile: a task journey" />
 </p>
 
 > 🎬 Full-quality clips: [log your day](docs/media/log-your-day.mp4) · [onboarding](docs/media/onboarding.mp4) · [reports](docs/media/reports.mp4) · [explore](docs/media/explore.mp4) · [mobile](docs/media/mobile.mp4)
@@ -241,14 +255,16 @@ flowchart LR
 
 ShipLog runs on **Google Gemini `gemini-3.5-flash`** via the Vercel AI SDK, with **OpenAI `gpt-5.4-mini`** as an automatic fallback.
 
-| Feature              | Where in the code               | What the model does                                                                                                              | Technique                                                                  |
-| -------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **Structure my day** | `POST /api/entries`             | Turns a rambling Hinglish note into Done / In progress / Blockers / Tomorrow with projects, and finds commits you didn't mention | Structured output (zod schema), grounded on your GitHub/Bitbucket activity |
-| **Create ticket**    | `POST /api/tickets`             | Writes a GitHub issue (title, context, acceptance criteria, labels) from a blocker                                               | Structured output                                                          |
-| **Standup**          | `POST /api/reports` (`standup`) | Yesterday / Today / Blockers in Slack, Teams or plain format                                                                     | Streaming, format-specific prompts                                         |
-| **Weekly report**    | `POST /api/reports` (`weekly`)  | Manager-ready weekly summary                                                                                                     | Streaming                                                                  |
-| **Brag doc**         | `POST /api/reports` (`brag`)    | Impact-focused achievements over months, grouped by project                                                                      | Streaming, facts-only prompt                                               |
-| **Ask your journal** | `POST /api/ask`                 | Answers questions about your past work, citing dates                                                                             | Retrieval with Postgres full-text search, then a grounded answer           |
+| Feature                 | Where in the code                                   | What the model does                                                                                                                              | Technique                                                                                   |
+| ----------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| **Structure my day**    | `POST /api/entries`                                 | Turns a rambling Hinglish note into Done / In progress / Blockers / Tomorrow with projects, and finds commits you didn't mention                 | Structured output (zod schema), grounded on your GitHub/Bitbucket activity                  |
+| **Task journeys**       | `POST /api/entries`, `src/lib/server/task-links.ts` | Links each new log item to one of your open tasks (shown to the model as short ids like `t3`), names new tasks, and leaves routine work unlinked | Structured output; ids mapped back server-side, so the model never sees or invents real ids |
+| **Follow-up questions** | `POST /api/entries/[id]/refine`                     | Asks up to 3 questions about vague items or blockers, then folds your answers into the log                                                       | Structured output                                                                           |
+| **Create ticket**       | `POST /api/tickets`                                 | Writes a GitHub issue (title, context, acceptance criteria, labels) from a blocker                                                               | Structured output                                                                           |
+| **Standup**             | `POST /api/reports` (`standup`)                     | Yesterday / Today / Blockers in Slack, Teams or plain format                                                                                     | Streaming, format-specific prompts                                                          |
+| **Weekly report**       | `POST /api/reports` (`weekly`)                      | Manager-ready weekly summary                                                                                                                     | Streaming                                                                                   |
+| **Brag doc**            | `POST /api/reports` (`brag`)                        | Impact-focused achievements over months, grouped by project                                                                                      | Streaming, facts-only prompt                                                                |
+| **Ask your journal**    | `POST /api/ask`                                     | Answers questions about your past work, citing dates                                                                                             | Retrieval with Postgres full-text search, then a grounded answer                            |
 
 **How we keep it fast, cheap and honest**
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, FileText, GitBranch, MessageSquareText, Mic, Sparkles } from "lucide-react";
+import { CalendarRange, FileText, GitBranch, MessageSquareText, Mic, Route, Sparkles } from "lucide-react";
 import { useId } from "react";
 import { FORMAT_OPTIONS } from "@/components/format-options";
 import { LogoMark } from "@/components/Logo";
@@ -116,6 +116,11 @@ function Format({ draft, onDraft }: StepProps) {
 const TOOLS = [
   { icon: FileText, name: "Reports", text: "Standup, weekly report or brag doc from your logs, in one click." },
   { icon: CalendarRange, name: "Timeline", text: "A heatmap of every day you logged, with streaks and stats." },
+  {
+    icon: Route,
+    name: "Journeys",
+    text: "Each task from start to shipped: blockers, how they were fixed, your learnings. Tap “Journey” on any item.",
+  },
   { icon: MessageSquareText, name: "Ask", text: "“When did I last work on onboarding?”, answered with dates." },
 ];
 

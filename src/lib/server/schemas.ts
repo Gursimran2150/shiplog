@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { MAX_LOG_CHARS, MAX_QUESTION_CHARS, REPORT_KINDS, STANDUP_FORMATS } from "@/lib/domain/types";
+import {
+  MAX_LOG_CHARS,
+  MAX_NOTE_CHARS,
+  MAX_QUESTION_CHARS,
+  NOTE_KINDS,
+  REPORT_KINDS,
+  SECTIONS,
+  STANDUP_FORMATS,
+} from "@/lib/domain/types";
 
 /** Server-side validation. Client components import types from `@/lib/domain/types` instead. */
 
@@ -20,38 +28,95 @@ const timeZone = z
 /** GitHub usernames: 1–39 chars, alphanumeric or single hyphens, not starting or ending with one. */
 const githubUsername = z.string().regex(/^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i, "Not a valid GitHub username");
 
-const logItem = z.object({
-  text: z
-    .string()
-    .min(1)
-    .max(300)
-    .describe("One concrete piece of work, written as a short past or present-tense phrase"),
-  project: z.string().max(60).nullable().describe("Project, repo or area if mentioned, e.g. 'checkout', 'web-app'"),
+const itemText = z
+  .string()
+  .min(1)
+  .max(300)
+  .describe("One concrete piece of work, written as a short past or present-tense phrase");
+const itemProject = z
+  .string()
+  .max(60)
+  .nullable()
+  .describe("Project, repo or area if mentioned, e.g. 'checkout', 'web-app'");
+
+/** A stored log item. `taskId` links it to a task's journey. */
+const logItem = z.object({ text: itemText, project: itemProject, taskId: z.uuid().optional() });
+
+const sections = <T extends z.ZodType>(item: T) => ({
+  summary: z.string().max(240).describe("One-sentence summary of the day"),
+  done: z.array(item).max(20),
+  inProgress: z.array(item).max(20),
+  blockers: z.array(item).max(10),
+  tomorrow: z.array(item).max(20),
 });
 
-export const entryDataSchema = z.object({
-  summary: z.string().max(240).describe("One-sentence summary of the day"),
-  done: z.array(logItem).max(20),
-  inProgress: z.array(logItem).max(20),
-  blockers: z.array(logItem).max(10),
-  tomorrow: z.array(logItem).max(20),
+export const entryDataSchema = z.object(sections(logItem));
+
+/**
+ * What the model writes for each item: instead of a uuid it picks a short alias from the
+ * open-tasks list it was shown (or "new" / null), which the server maps back to real task ids.
+ *
+ * The model-facing schemas carry no length/count limits: Gemini rejects response schemas past a
+ * complexity budget, and this one (4 sections × 3 fields + missed + followUps) crosses it once
+ * limits are added. `clampEntry`/`clampStructured` apply the stored schema's limits afterwards.
+ */
+const aiLogItem = z.object({
+  text: z.string().describe("One concrete piece of work, written as a short past or present-tense phrase"),
+  project: z.string().nullable().describe("Project, repo or area if mentioned, e.g. 'checkout', 'web-app'"),
+  task: z
+    .string()
+    .nullable()
+    .describe(
+      "Id of the open task this item continues (e.g. 't3'); 'new: <short task name>' when it starts a new piece of trackable work (e.g. 'new: Dashboard usage charts'); null for routine work such as code reviews, meetings or interviews",
+    ),
+});
+
+export const aiEntrySchema = z.object({
+  summary: z.string().describe("One-sentence summary of the day"),
+  done: z.array(aiLogItem),
+  inProgress: z.array(aiLogItem),
+  blockers: z.array(aiLogItem),
+  tomorrow: z.array(aiLogItem),
 });
 
 /** What the model returns when structuring a spoken log. */
-export const structuredLogSchema = entryDataSchema.extend({
+export const structuredLogSchema = aiEntrySchema.extend({
   missed: z
-    .array(z.object({ text: z.string().max(200), url: z.string().url() }))
-    .max(10)
+    .array(z.object({ text: z.string(), url: z.string() }))
     .describe("GitHub commits/PRs from the reference data that the engineer did not mention"),
   followUps: z
-    .array(z.string().max(160))
-    .max(3)
+    .array(z.string())
     .describe(
       "Up to 3 short questions that would make the log more useful: for blockers ask who/what you're waiting on, since when, and what would unblock it; for vague items ask for the outcome or a number. Empty when the log is already clear.",
     ),
 });
 
-/** One-tap demo: "mock" comes with two weeks of sample logs, "empty" starts from a blank journal. */
+const SECTION_MAX = { done: 20, inProgress: 20, blockers: 10, tomorrow: 20 } as const;
+
+/** Applies the stored schema's limits to model output: trims text, caps list sizes, drops empty items. */
+export function clampEntry<T extends z.infer<typeof aiEntrySchema>>(ai: T): T {
+  const out = { ...ai, summary: ai.summary.trim().slice(0, 240) };
+  for (const section of SECTIONS) {
+    out[section] = ai[section]
+      .map((i) => ({ ...i, text: i.text.trim().slice(0, 300), project: i.project?.trim().slice(0, 60) || null }))
+      .filter((i) => i.text)
+      .slice(0, SECTION_MAX[section]);
+  }
+  return out;
+}
+
+export function clampStructured(s: z.infer<typeof structuredLogSchema>): z.infer<typeof structuredLogSchema> {
+  return {
+    ...clampEntry(s),
+    missed: s.missed.slice(0, 10).map((m) => ({ text: m.text.slice(0, 200), url: m.url })),
+    followUps: s.followUps
+      .map((q) => q.trim().slice(0, 160))
+      .filter(Boolean)
+      .slice(0, 3),
+  };
+}
+
+/** One-tap demo: "mock" comes with ~18 months of sample logs, "empty" starts from a blank journal. */
 export const demoRequest = z.object({ data: z.enum(["mock", "empty"]) });
 
 export const refineEntryRequest = z.object({
@@ -112,4 +177,21 @@ export const excludedReposBody = z.object({
     .array(z.string().regex(/^[\w.-]+\/[\w.-]+$/))
     .max(500)
     .transform((list) => [...new Set(list)]),
+});
+
+export const taskBody = z.object({
+  title: z.string().trim().min(2).max(160),
+  project: z.string().trim().max(60).nullable(),
+});
+
+export const noteBody = z.object({
+  kind: z.enum(NOTE_KINDS),
+  body: z.string().trim().min(1).max(MAX_NOTE_CHARS),
+});
+
+/** Re-links one log item: to a task, or to none (null). */
+export const linkItemBody = z.object({
+  section: z.enum(SECTIONS),
+  index: z.number().int().min(0).max(19),
+  taskId: z.uuid().nullable(),
 });

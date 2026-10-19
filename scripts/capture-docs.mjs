@@ -123,7 +123,10 @@ if (!process.env.FROM_STEP || process.env.FROM_STEP <= "3") {
   await shot(page, "reports-standup", true);
   await page.getByRole("tab", { name: "Weekly report" }).click();
   await page.waitForTimeout(500);
-  await page.getByRole("button", { name: /Previous week/i }).click();
+  await page.getByRole("button", { name: /choose a week/ }).click();
+  await page.waitForTimeout(700);
+  await shot(page, "reports-week-picker");
+  await page.getByRole("dialog", { name: "Choose a week" }).getByRole("button", { name: "Last week" }).click();
   await page.getByRole("button", { name: /Generate weekly report/ }).click();
   await answer.and(page.locator('[aria-busy="false"]')).waitFor({ timeout: 60_000 });
   await page.waitForTimeout(800);
@@ -146,6 +149,15 @@ if (!process.env.FROM_STEP || process.env.FROM_STEP <= "3") {
   await page.getByRole("button", { name: /Previous week/ }).click();
   await page.waitForTimeout(900);
   await shot(page, "timeline", true);
+
+  await page.goto(`${BASE}/journeys`);
+  const tree = page.getByRole("navigation", { name: "Tasks by project" });
+  await tree.getByRole("searchbox").fill("usage api");
+  await tree.getByRole("button", { name: /Integrate the usage API into the dashboard/ }).click();
+  await page.waitForTimeout(900);
+  await tree.getByRole("searchbox").fill("");
+  await page.waitForTimeout(900);
+  await shot(page, "journeys", true);
 
   await page.goto(`${BASE}/ask`);
   await page.waitForTimeout(600);
@@ -202,6 +214,11 @@ if (!process.env.FROM_STEP || process.env.FROM_STEP <= "3") {
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(600);
   await shot(page, "mobile-timeline");
+  await page.goto(`${BASE}/journeys`);
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("article").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(600);
+  await shot(page, "mobile-journeys");
   await saveVideo(context, page, "mobile");
 }
 

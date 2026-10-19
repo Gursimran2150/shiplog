@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarRange, CircleCheck, Mic, Ticket } from "lucide-react";
+import { ArrowRight, CalendarRange, CircleCheck, Mic, Route, Ticket } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { TOUCH_TARGET } from "./touch";
@@ -43,6 +43,12 @@ export function NextSteps({ hasBlockers, onTicketBlockers }: NextStepsProps) {
           <Link href="/reports?tab=weekly">
             <CalendarRange aria-hidden="true" />
             Weekly report
+          </Link>
+        </Button>
+        <Button asChild variant="ghost" size="sm" className={TOUCH_TARGET}>
+          <Link href="/journeys">
+            <Route aria-hidden="true" />
+            Task journeys
           </Link>
         </Button>
         {hasBlockers && (

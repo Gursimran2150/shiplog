@@ -1,5 +1,5 @@
 import { addDays } from "@/lib/domain/dates";
-import type { EntryData, LogItem } from "@/lib/domain/types";
+import type { LogItem, NoteKind, Section } from "@/lib/domain/types";
 
 /**
  * About a year and a half of realistic history for demo accounts, generated deterministically
@@ -20,7 +20,7 @@ interface Arc {
   project: string;
   tasks: Phrase[];
   /** A blocker hit midway through the arc and who it waits on. */
-  blocker?: { en: string; hi: string; person: string };
+  blocker?: { en: string; hi: string; person: string; fix: string; learning: string };
   /** What shipping it achieved, said on the last day. */
   outcome: Phrase;
 }
@@ -41,6 +41,8 @@ const ARCS: Arc[] = [
       en: "Final brand colours not signed off by design",
       hi: "brand colours abhi design se final nahi hue",
       person: "Neha",
+      fix: "Neha shared two palette options; we shipped tokens with the safer one and swapped values later, no component changes needed.",
+      learning: "Build on tokens, not raw colours, so design decisions can land late without blocking engineering.",
     },
     outcome: p(
       "Design system v1 shipped: 14 components, settings page migrated",
@@ -59,6 +61,8 @@ const ARCS: Arc[] = [
       en: "Google OAuth consent screen waiting for verification",
       hi: "Google OAuth consent screen verification pe atka hai",
       person: "Vikram",
+      fix: "Vikram submitted the privacy policy URL and demo video; Google approved in 3 days. We tested meanwhile with internal test users.",
+      learning: "Start OAuth verification on day one; it runs on Google's clock, not ours.",
     },
     outcome: p(
       "Google sign-in live; login drop-off down 18%",
@@ -79,6 +83,8 @@ const ARCS: Arc[] = [
       en: "Payment gateway sandbox keys not issued",
       hi: "payment gateway ki sandbox keys abhi nahi mili",
       person: "Arjun",
+      fix: "Arjun escalated to the gateway's account manager; meanwhile I built against a mocked client with the same interface.",
+      learning: "Wrap third-party SDKs behind our own interface so a missing key never blocks UI work.",
     },
     outcome: p("New checkout at 100%: conversion up 9%", "naya checkout 100 percent pe, conversion 9 percent upar"),
   },
@@ -95,6 +101,8 @@ const ARCS: Arc[] = [
       en: "Analytics API returns wrong totals for IST",
       hi: "analytics API IST ke liye galat totals de rahi hai",
       person: "Rahul",
+      fix: "Root cause: totals were bucketed in UTC. Rahul added a timeZone param; we pass the user's zone from the browser.",
+      learning: "Always send the user's time zone with date-range queries; never let the server guess.",
     },
     outcome: p("Dashboard v2 released; page load 2.1s → 0.9s", "dashboard v2 release, load time 2.1 se 0.9 second"),
   },
@@ -124,6 +132,8 @@ const ARCS: Arc[] = [
       en: "WebSocket gateway not deployed to staging",
       hi: "WebSocket gateway staging pe deploy nahi hua",
       person: "Karan",
+      fix: "Karan deployed the gateway behind a feature flag; I added polling as a fallback so the UI works either way.",
+      learning: "Real-time features need a graceful fallback from day one.",
     },
     outcome: p("Notification centre live for all users", "notification centre sab users ke liye live"),
   },
@@ -160,6 +170,8 @@ const ARCS: Arc[] = [
       en: "Search API rate-limits the staging key",
       hi: "search API staging key ko rate limit kar rahi hai",
       person: "Rahul",
+      fix: "Rahul raised the staging quota; I added 250ms debouncing and request cancellation, which cut calls by 70%.",
+      learning: "Debounce and cancel in-flight requests for type-ahead search before asking for more quota.",
     },
     outcome: p(
       "Command palette shipped; 30% of power users use it daily",
@@ -188,6 +200,8 @@ const ARCS: Arc[] = [
       en: "GST invoice format pending from finance",
       hi: "GST invoice ka format finance se pending hai",
       person: "Priya",
+      fix: "Priya shared the GST template; we render invoices server-side from it so finance can change the layout later.",
+      learning: "Ask finance and legal for formats in week one of any billing work.",
     },
     outcome: p(
       "Self-serve upgrades live; 120 upgrades in week one",
@@ -217,6 +231,8 @@ const ARCS: Arc[] = [
       en: "Image upload service returns 413 for large files",
       hi: "badi files pe upload service 413 de rahi hai",
       person: "Karan",
+      fix: "Karan raised the body limit to 10 MB; I now resize images client-side to max 2560px before upload.",
+      learning: "Validate and shrink files on the client; it's faster for users and protects the server.",
     },
     outcome: p(
       "Editor v3 shipped; support tickets about editing down 35%",
@@ -245,6 +261,8 @@ const ARCS: Arc[] = [
       en: "Roles API missing the 'billing admin' role",
       hi: "roles API mein 'billing admin' role missing hai",
       person: "Arjun",
+      fix: "Arjun added the role behind a migration; I modelled roles as data from the API instead of a hard-coded enum.",
+      learning: "Don't hard-code permission lists in the UI; read them from the API.",
     },
     outcome: p("Team management shipped to all paid workspaces", "team management sab paid workspaces pe ship"),
   },
@@ -299,8 +317,6 @@ function rng(seed: number) {
   };
 }
 
-const item = (phrase: Phrase, project: string | null): LogItem => ({ text: phrase.en, project });
-
 /** Tasks are written as plans ("Build X"); once done they read in the past tense ("Built X"). */
 const PAST: Record<string, string> = {
   Add: "Added",
@@ -332,10 +348,10 @@ const PAST: Record<string, string> = {
   Wire: "Wired",
   Write: "Wrote",
 };
-const finished = (phrase: Phrase, project: string): LogItem => {
-  const [verb, ...rest] = phrase.en.split(" ");
-  if (verb === "Set" && rest[0] === "up") return { text: `Set up ${rest.slice(1).join(" ")}`, project };
-  return { text: `${PAST[verb] ?? verb} ${rest.join(" ")}`, project };
+const pastTense = (en: string): string => {
+  const [verb, ...rest] = en.split(" ");
+  if (verb === "Set" && rest[0] === "up") return en;
+  return `${PAST[verb] ?? verb} ${rest.join(" ")}`;
 };
 
 /** "colour aur spacing tokens define kiye" → "colour aur spacing tokens define" (the work, without the verb). */
@@ -343,20 +359,46 @@ const topic = (hi: string) =>
   hi.replace(/ (kiya|kiye|ki|banaya|banayi|banaye|lagaya|lagaye|likhe|likha|likhi|chalaya|joda|nikala|le gaya)$/, "");
 const lower = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
 
-export interface DemoEntry {
+/** A log item that may belong to a demo task, referenced by a stable key until ids are assigned. */
+export interface DemoItem extends LogItem {
+  key?: string;
+}
+
+export interface DemoDay {
   date: string;
   raw: string;
-  data: EntryData;
+  data: { summary: string } & Record<Section, DemoItem[]>;
+}
+
+export interface DemoTask {
+  key: string;
+  title: string;
+  project: string | null;
+}
+
+export interface DemoNote {
+  key: string;
+  kind: NoteKind;
+  body: string;
+}
+
+export interface DemoJournal {
+  days: DemoDay[];
+  tasks: DemoTask[];
+  notes: DemoNote[];
 }
 
 /**
  * Generates one log per working day from `from` up to (not including) `until`. Weekends,
- * holidays and ~7% of ordinary days are skipped, as real people forget.
+ * holidays and ~7% of ordinary days are skipped, as real people forget. Each project task is a
+ * demo task (its journey); blockers come with a "how it was fixed" note and a learning.
  */
-export function demoHistory(from: string, until: string, seed = 2150): DemoEntry[] {
+export function demoHistory(from: string, until: string, seed = 2150): DemoJournal {
   const random = rng(seed);
   const pick = <T>(list: readonly T[]) => list[Math.floor(random() * list.length)];
-  const entries: DemoEntry[] = [];
+  const days: DemoDay[] = [];
+  const tasks = new Map<string, DemoTask>();
+  const notes: DemoNote[] = [];
 
   let arcIndex = 0;
   let taskIndex = 0;
@@ -365,81 +407,91 @@ export function demoHistory(from: string, until: string, seed = 2150): DemoEntry
   let blocked = 0; // days left on the current blocker
   let blockerUsed = false;
 
+  /** The task at a position in the arc sequence, registered on first use. */
+  const taskAt = (arcAt: number, at: number) => {
+    const arc = ARCS[arcAt % ARCS.length];
+    const phrase = arc.tasks[at];
+    const key = `h${arcAt}-${at}`;
+    // Projects come round again after a year: the second pass is the next version of that work.
+    const round = Math.floor(arcAt / ARCS.length);
+    const title = round ? `${phrase.en} (v${round + 1})` : phrase.en;
+    if (!tasks.has(key)) tasks.set(key, { key, title, project: arc.project });
+    return { arc, phrase, key };
+  };
+
   for (let date = from; date < until; date = addDays(date, 1)) {
     const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
     if (weekday === 0 || weekday === 6 || isLeave(date) || random() < 0.07) continue;
 
-    const arc = ARCS[arcIndex % ARCS.length];
-    const task = arc.tasks[taskIndex];
-    const done: LogItem[] = [];
-    const inProgress: LogItem[] = [];
-    const blockers: LogItem[] = [];
-    const tomorrow: LogItem[] = [];
+    const { arc, phrase: task, key } = taskAt(arcIndex, taskIndex);
+    const done: DemoItem[] = [];
+    const inProgress: DemoItem[] = [];
+    const blockers: DemoItem[] = [];
+    const tomorrow: DemoItem[] = [];
     const said: string[] = [];
 
     // Hit the arc's blocker once, about halfway through.
     if (arc.blocker && !blockerUsed && taskIndex === Math.floor(arc.tasks.length / 2)) {
       blockerUsed = true;
       blocked = 1 + Math.floor(random() * 3);
+      notes.push({ key, kind: "fix", body: arc.blocker.fix }, { key, kind: "learning", body: arc.blocker.learning });
     }
 
     let summary: string;
     if (blocked > 0 && arc.blocker) {
       const { en, hi, person } = arc.blocker;
       blocked--;
-      blockers.push({ text: `${en} (waiting on ${person})`, project: arc.project });
-      inProgress.push(item(task, arc.project));
-      tomorrow.push({ text: `Follow up with ${person} to unblock: ${lower(task.en)}`, project: arc.project });
+      blockers.push({ text: `${en} (waiting on ${person})`, project: arc.project, key });
+      inProgress.push({ text: task.en, project: arc.project, key });
+      tomorrow.push({ text: `Follow up with ${person} to unblock: ${lower(task.en)}`, project: arc.project, key });
       said.push(
         `${topic(task.hi)} wala kaam ruka hua hai, ${hi}`,
         `${person} ko ping kiya, kal phir follow up karunga`,
       );
       summary = `Blocked on ${arc.project}: ${lower(en)}.`;
     } else if (--taskDaysLeft <= 0) {
-      const main = finished(task, arc.project);
-      done.push(main);
+      const text = pastTense(task.en);
+      done.push({ text, project: arc.project, key });
       said.push(`aaj ${task.hi}`);
-      summary = main.text;
+      summary = text;
       taskIndex++;
       taskDaysLeft = 1 + Math.floor(random() * 3);
       progress = 0;
       if (taskIndex >= arc.tasks.length) {
-        done.push(item(arc.outcome, arc.project));
+        done.push({ text: arc.outcome.en, project: arc.project, key });
         said.push(`${arc.outcome.hi}, finally ship ho gaya`);
         summary = `Shipped ${arc.project}: ${lower(arc.outcome.en)}`;
         arcIndex++;
         taskIndex = 0;
         blockerUsed = false;
       }
-      const nextArc = ARCS[arcIndex % ARCS.length];
-      const next = nextArc.tasks[taskIndex];
-      tomorrow.push(item(next, nextArc.project));
-      said.push(`kal ${topic(next.hi)} karna hai`);
+      const next = taskAt(arcIndex, taskIndex);
+      tomorrow.push({ text: next.phrase.en, project: next.arc.project, key: next.key });
+      said.push(`kal ${topic(next.phrase.hi)} karna hai`);
     } else {
       progress = Math.min(90, progress + 20 + Math.floor(random() * 3) * 10);
-      const pct = progress;
-      inProgress.push({ text: `${task.en} (${pct}% done)`, project: arc.project });
-      tomorrow.push(item(task, arc.project));
-      said.push(`${topic(task.hi)} wala kaam chal raha hai, ${pct} percent ho gaya`);
-      summary = `Progressed on ${arc.project}: ${lower(task.en)} (${pct}%)`;
+      inProgress.push({ text: `${task.en} (${progress}% done)`, project: arc.project, key });
+      tomorrow.push({ text: task.en, project: arc.project, key });
+      said.push(`${topic(task.hi)} wala kaam chal raha hai, ${progress} percent ho gaya`);
+      summary = `Progressed on ${arc.project}: ${lower(task.en)} (${progress}%)`;
     }
 
-    // Everyday engineering work around the main project.
+    // Everyday engineering work around the main project (routine: not tracked as tasks).
     const sideCount = random() < 0.55 ? 1 : random() < 0.25 ? 2 : 0;
     for (let i = 0; i < sideCount; i++) {
       const side = pick(SIDE);
       if (done.some((d) => d.text === side.en)) continue;
-      done.push(item(side, null));
+      done.push({ text: side.en, project: null });
       said.push(random() < 0.5 ? `aur ${side.hi}` : `saath mein ${side.hi}`);
     }
     if (!blockers.length && done.length > 1) summary += `, plus ${done.length - 1} more`;
     if (!summary.endsWith(".")) summary += ".";
 
-    entries.push({
+    days.push({
       date,
       raw: `${said.join(". ")}.`.replace(/^./, (c) => c.toUpperCase()),
       data: { summary: summary.slice(0, 240), done, inProgress, blockers, tomorrow },
     });
   }
-  return entries;
+  return { days, tasks: [...tasks.values()], notes };
 }

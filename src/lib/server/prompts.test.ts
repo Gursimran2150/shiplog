@@ -23,7 +23,8 @@ describe("formatEntries", () => {
 describe("prompts", () => {
   it("structure prompt includes GitHub activity as reference only when given", () => {
     expect(structurePrompt("2026-10-20", "")).not.toContain("<reference>");
-    expect(structurePrompt("2026-10-20", "commit abc")).toContain("<reference>\ncommit abc");
+    expect(structurePrompt("2026-10-20", "commit abc")).toContain("<reference>\nGitHub activity:\ncommit abc");
+    expect(structurePrompt("2026-10-20", "", "t1: CSV export")).toContain("Open tasks:\nt1: CSV export");
     expect(structurePrompt("2026-10-20", "")).toContain("Hinglish");
   });
 

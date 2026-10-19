@@ -1,6 +1,7 @@
 export const NAV_ITEMS = [
   { href: "/", label: "Today" },
   { href: "/timeline", label: "Timeline" },
+  { href: "/journeys", label: "Journeys" },
   { href: "/reports", label: "Reports" },
   { href: "/ask", label: "Ask" },
   { href: "/settings", label: "Settings" },
