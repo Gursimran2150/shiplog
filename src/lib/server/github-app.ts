@@ -6,6 +6,7 @@ import { createAnswerCache } from "@/lib/ai/cache";
 import { localDate } from "@/lib/domain/dates";
 import type { Activity } from "@/lib/domain/types";
 import { getEnv } from "@/lib/env";
+import { mapLimit } from "./concurrency";
 
 /**
  * ShipLog GitHub App: read-only access (contents, metadata, pull requests) to the repos the
@@ -110,21 +111,6 @@ export async function installationRepos(
   repos.sort((a, b) => a.fullName.localeCompare(b.fullName));
   repoCache.set(key, JSON.stringify(repos));
   return repos;
-}
-
-/** Runs `fn` over `items` with at most `limit` in flight. */
-async function mapLimit<T, R>(items: readonly T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let next = 0;
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, async () => {
-      while (next < items.length) {
-        const i = next++;
-        results[i] = await fn(items[i]);
-      }
-    }),
-  );
-  return results;
 }
 
 const commitList = z.array(

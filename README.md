@@ -30,6 +30,24 @@ I'm a frontend engineer. Every day I write a standup, every Friday a weekly upda
 8. **Fast everywhere:** a `⌘K` command menu, `?` for shortcuts, and inline editing of any structured item.
 9. **Your data:** export the whole journal as Markdown, or permanently delete your account.
 
+## Private and company repos (GitHub + Bitbucket)
+
+Users never create apps. They click **Settings → Connect GitHub / Connect Bitbucket**, approve on the provider's own screen, and pick which repos ShipLog tracks (each repo has an include/exclude switch).
+
+|                 | GitHub                                                                       | Bitbucket Cloud                                 |
+| --------------- | ---------------------------------------------------------------------------- | ----------------------------------------------- |
+| Mechanism       | ShipLog GitHub App (installed per account/org)                               | OAuth 2.0 consumer (authorized per user)        |
+| Access          | Read-only: contents, metadata, pull requests, on the repos chosen at install | Read-only: account, repositories, pull requests |
+| Stored          | Installation id only; 1-hour tokens minted on demand                         | Access + refresh token, AES-256-GCM encrypted   |
+| Ownership check | Signed `state` + GitHub confirms the user can access the installation        | Signed `state` bound to the user                |
+
+**One-time setup by whoever deploys ShipLog:**
+
+- **GitHub:** `node scripts/create-github-app.mjs https://your-domain`, then click once. GitHub's manifest flow creates the App, and its credentials are written to `.env.local` (`GITHUB_APP_*`).
+- **Bitbucket:** in any workspace you own, go to _Workspace settings → OAuth consumers → Add consumer_. Set the callback URL to `https://your-domain/api/bitbucket/callback`, and grant Account: Read, Repositories: Read and Pull requests: Read. Copy the key and secret into `BITBUCKET_CLIENT_ID` and `BITBUCKET_CLIENT_SECRET`.
+
+Without these variables the app falls back to public GitHub activity by username.
+
 ## How I used Wispr Flow
 
 - **Building:** I built ShipLog by voice. Prompts to my AI coding assistant, product decisions, commit messages, this README and my build-in-public posts were dictated with Wispr Flow (see my usage card).

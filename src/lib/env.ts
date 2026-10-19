@@ -17,6 +17,9 @@ const envSchema = z.object({
   GITHUB_APP_CLIENT_ID: z.string().min(1).optional(),
   GITHUB_APP_CLIENT_SECRET: z.string().min(1).optional(),
   GITHUB_APP_PRIVATE_KEY: z.string().min(1).optional(),
+  // Bitbucket OAuth consumer (optional): Workspace settings → OAuth consumers.
+  BITBUCKET_CLIENT_ID: z.string().min(1).optional(),
+  BITBUCKET_CLIENT_SECRET: z.string().min(1).optional(),
 });
 
 type Env = z.infer<typeof envSchema>;

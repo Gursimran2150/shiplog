@@ -105,17 +105,18 @@ describe("GitHub App", () => {
   });
 });
 
-describe("install state", () => {
+describe("OAuth state", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.stubEnv("AUTH_SECRET", "s".repeat(40));
   });
 
-  it("is bound to the user who started the flow", async () => {
-    const { signInstallState, verifyInstallState } = await import("./github-state");
-    const state = await signInstallState("user-1");
-    expect(await verifyInstallState(state, "user-1")).toBe(true);
-    expect(await verifyInstallState(state, "user-2")).toBe(false);
-    expect(await verifyInstallState(`${state}x`, "user-1")).toBe(false);
+  it("is bound to the user and the provider that started the flow", async () => {
+    const { signOAuthState, verifyOAuthState } = await import("./oauth-state");
+    const state = await signOAuthState("user-1", "github-install");
+    expect(await verifyOAuthState(state, "user-1", "github-install")).toBe(true);
+    expect(await verifyOAuthState(state, "user-2", "github-install")).toBe(false);
+    expect(await verifyOAuthState(state, "user-1", "bitbucket-connect")).toBe(false);
+    expect(await verifyOAuthState(`${state}x`, "user-1", "github-install")).toBe(false);
   });
 });

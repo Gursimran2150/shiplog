@@ -2,7 +2,7 @@ import { z } from "zod";
 import { userRoute } from "@/lib/api/route";
 import { saveGithubConnection } from "@/lib/db/repo";
 import { appConfig, verifyInstallation } from "@/lib/server/github-app";
-import { verifyInstallState } from "@/lib/server/github-state";
+import { verifyOAuthState } from "@/lib/server/oauth-state";
 
 const callbackQuery = z.object({
   code: z.string().min(1).max(100),
@@ -22,7 +22,8 @@ export const GET = userRoute({}, async ({ request, user }) => {
   if (!app || !query.success) return Response.redirect(settingsUrl("error"), 302);
 
   const { code, installation_id: installationId, state } = query.data;
-  if (!state || !(await verifyInstallState(state, user.id))) return Response.redirect(settingsUrl("expired"), 302);
+  if (!state || !(await verifyOAuthState(state, user.id, "github-install")))
+    return Response.redirect(settingsUrl("expired"), 302);
 
   const login = await verifyInstallation(app, code, installationId).catch(() => null);
   if (!login) return Response.redirect(settingsUrl("denied"), 302);

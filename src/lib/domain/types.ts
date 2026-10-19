@@ -80,9 +80,12 @@ export interface RepoAccess {
   tracked: boolean;
 }
 
-export interface GithubConnection {
-  /** False when the server has no GitHub App configured (public-username mode only). */
-  appEnabled: boolean;
+export const INTEGRATIONS = ["github", "bitbucket"] as const;
+export type Integration = (typeof INTEGRATIONS)[number];
+
+export interface IntegrationStatus {
+  /** False when this deployment has no credentials for the provider. */
+  enabled: boolean;
   connected: boolean;
   login: string | null;
   manageUrl: string | null;

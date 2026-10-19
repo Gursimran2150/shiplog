@@ -224,3 +224,62 @@ export async function setExcludedRepos(userId: string, excluded: string[]): Prom
 export async function deleteGithubConnection(userId: string): Promise<void> {
   await db()`DELETE FROM github_connections WHERE user_id = ${userId}`;
 }
+
+// ---------- Bitbucket connections (tokens arrive and leave encrypted; see lib/server/crypto) ----------
+
+const bitbucketRow = z.object({
+  account_uuid: z.string(),
+  username: z.string(),
+  access_token: z.string(),
+  refresh_token: z.string(),
+  expires_at: z.coerce.date(),
+  excluded_repos: z.array(z.string()),
+});
+
+interface StoredBitbucketConnection {
+  accountUuid: string;
+  username: string;
+  sealedAccessToken: string;
+  sealedRefreshToken: string;
+  expiresAt: Date;
+  excluded: string[];
+}
+
+export async function getBitbucketConnection(userId: string): Promise<StoredBitbucketConnection | null> {
+  const result = await db()`
+    SELECT account_uuid, username, access_token, refresh_token, expires_at, excluded_repos
+    FROM bitbucket_connections WHERE user_id = ${userId}`;
+  const [row] = rows(bitbucketRow, result);
+  return row
+    ? {
+        accountUuid: row.account_uuid,
+        username: row.username,
+        sealedAccessToken: row.access_token,
+        sealedRefreshToken: row.refresh_token,
+        expiresAt: row.expires_at,
+        excluded: row.excluded_repos,
+      }
+    : null;
+}
+
+export async function saveBitbucketConnection(
+  userId: string,
+  c: Omit<StoredBitbucketConnection, "excluded">,
+): Promise<void> {
+  await db()`
+    INSERT INTO bitbucket_connections (user_id, account_uuid, username, access_token, refresh_token, expires_at)
+    VALUES (${userId}, ${c.accountUuid}, ${c.username}, ${c.sealedAccessToken}, ${c.sealedRefreshToken}, ${c.expiresAt.toISOString()})
+    ON CONFLICT (user_id) DO UPDATE SET
+      account_uuid = EXCLUDED.account_uuid, username = EXCLUDED.username,
+      access_token = EXCLUDED.access_token, refresh_token = EXCLUDED.refresh_token, expires_at = EXCLUDED.expires_at`;
+}
+
+export async function setBitbucketExcluded(userId: string, excluded: string[]): Promise<boolean> {
+  const result = await db()`
+    UPDATE bitbucket_connections SET excluded_repos = ${excluded}::text[] WHERE user_id = ${userId} RETURNING user_id AS id`;
+  return rows(idRow, result).length > 0;
+}
+
+export async function deleteBitbucketConnection(userId: string): Promise<void> {
+  await db()`DELETE FROM bitbucket_connections WHERE user_id = ${userId}`;
+}

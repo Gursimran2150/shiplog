@@ -9,7 +9,8 @@ import type {
   DayCount,
   Entry,
   EntryData,
-  GithubConnection,
+  Integration,
+  IntegrationStatus,
   MissedActivity,
   RepoAccess,
   Settings,
@@ -108,40 +109,37 @@ export function useJournalActions() {
   return { createEntry, updateEntry, deleteEntry };
 }
 
-/** GitHub App connection state (private repos). */
-export function useGithubConnection() {
-  const { data, isLoading, mutate } = useSWR<GithubConnection>("/api/github/status", fetcher);
+/** Connection state for a code host (GitHub App or Bitbucket OAuth). */
+export function useIntegration(provider: Integration) {
+  const { data, isLoading, mutate } = useSWR<IntegrationStatus>(`/api/${provider}/status`, fetcher);
   const disconnect = useCallback(async () => {
-    await api.delete("/api/github/connection");
+    await api.delete(`/api/${provider}/connection`);
     await mutate();
-  }, [mutate]);
+  }, [mutate, provider]);
   return { status: data ?? null, isLoading, disconnect };
 }
 
-/** Repos granted to the App with their tracked flag; `setExcluded` saves optimistically. */
-export function useGithubRepos(enabled: boolean) {
+/** Repos available through a connected provider, with the tracked flag; `setExcluded` saves optimistically. */
+export function useIntegrationRepos(provider: Integration, enabled: boolean) {
   const { data, isLoading, error, mutate } = useSWR<{ repos: RepoAccess[] }>(
-    enabled ? "/api/github/repos" : null,
+    enabled ? `/api/${provider}/repos` : null,
     fetcher,
   );
   const setExcluded = useCallback(
     async (excluded: string[]) => {
       const skip = new Set(excluded);
+      const apply = (cur?: { repos: RepoAccess[] }) => ({
+        repos: (cur?.repos ?? []).map((r) => ({ ...r, tracked: !skip.has(r.fullName) })),
+      });
       await mutate(
         async (cur) => {
-          await api.put("/api/github/repos", { excluded });
-          return { repos: (cur?.repos ?? []).map((r) => ({ ...r, tracked: !skip.has(r.fullName) })) };
+          await api.put(`/api/${provider}/repos`, { excluded });
+          return apply(cur);
         },
-        {
-          optimisticData: (cur) => ({
-            repos: (cur?.repos ?? []).map((r) => ({ ...r, tracked: !skip.has(r.fullName) })),
-          }),
-          rollbackOnError: true,
-          revalidate: false,
-        },
+        { optimisticData: apply, rollbackOnError: true, revalidate: false },
       );
     },
-    [mutate],
+    [mutate, provider],
   );
   return { repos: data?.repos ?? null, isLoading: enabled && isLoading, failed: Boolean(error), setExcluded };
 }

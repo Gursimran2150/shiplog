@@ -89,3 +89,11 @@ export const settingsSchema = z.object({
   standupFormat: z.enum(STANDUP_FORMATS),
   onboarded: z.boolean().default(false),
 });
+
+/** Repos to leave out of activity tracking ("owner/repo" or "workspace/repo"). */
+export const excludedReposBody = z.object({
+  excluded: z
+    .array(z.string().regex(/^[\w.-]+\/[\w.-]+$/))
+    .max(500)
+    .transform((list) => [...new Set(list)]),
+});

@@ -1,18 +1,29 @@
 import "server-only";
 import { getGithubConnection, getSettings } from "@/lib/db/repo";
 import type { Activity } from "@/lib/domain/types";
+import { bitbucketActivity } from "./bitbucket";
+import { bitbucketSession } from "./bitbucket-session";
 import { fetchActivity } from "./github";
 import { appConfig, privateActivity } from "./github-app";
 
 interface ActivityResult {
-  source: "app" | "public" | null;
   login: string | null;
   activity: Activity[];
 }
 
+/** Never let one provider's outage hide the others' activity. */
+async function safely(label: string, run: () => Promise<Activity[]>): Promise<Activity[]> {
+  try {
+    return await run();
+  } catch (error) {
+    console.warn(`[${label}]`, error);
+    return [];
+  }
+}
+
 /**
- * The user's GitHub activity for local dates [from, to]: private + public tracked repos via the
- * GitHub App when connected, otherwise public activity for the saved username.
+ * All of the user's code activity for local dates [from, to], fetched in parallel:
+ * GitHub (private + public via the App, or public-only via the saved username) and Bitbucket.
  */
 export async function userActivity(
   userId: string,
@@ -21,21 +32,26 @@ export async function userActivity(
   timeZone: string,
 ): Promise<ActivityResult> {
   const app = appConfig();
-  const [conn, settings] = await Promise.all([app ? getGithubConnection(userId) : null, getSettings(userId)]);
-  if (app && conn) {
-    try {
-      return { source: "app", login: conn.login, activity: await privateActivity(app, conn, from, to, timeZone) };
-    } catch (error) {
-      console.warn("[github-app]", error);
-      return { source: "app", login: conn.login, activity: [] };
-    }
-  }
-  if (settings.githubUsername) {
-    return {
-      source: "public",
-      login: settings.githubUsername,
-      activity: await fetchActivity(settings.githubUsername, from, to, timeZone),
-    };
-  }
-  return { source: null, login: null, activity: [] };
+  const [githubConn, settings, bitbucket] = await Promise.all([
+    app ? getGithubConnection(userId) : null,
+    getSettings(userId),
+    bitbucketSession(userId).catch((error: unknown) => {
+      console.warn("[bitbucket-session]", error);
+      return null;
+    }),
+  ]);
+
+  const githubLogin = githubConn?.login ?? settings.githubUsername;
+  const [github, bb] = await Promise.all([
+    app && githubConn
+      ? safely("github-app", () => privateActivity(app, githubConn, from, to, timeZone))
+      : settings.githubUsername
+        ? fetchActivity(settings.githubUsername, from, to, timeZone)
+        : Promise.resolve([]),
+    bitbucket
+      ? safely("bitbucket", () => bitbucketActivity(bitbucket.token, bitbucket, from, to, timeZone))
+      : Promise.resolve([]),
+  ]);
+
+  return { login: githubLogin ?? bitbucket?.username ?? null, activity: [...github, ...bb] };
 }

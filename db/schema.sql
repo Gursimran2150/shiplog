@@ -50,3 +50,16 @@ CREATE TABLE IF NOT EXISTS github_connections (
   excluded_repos  text[] NOT NULL DEFAULT '{}',
   created_at      timestamptz NOT NULL DEFAULT now()
 );
+
+-- Bitbucket Cloud via OAuth 2.0. Bitbucket access tokens expire after ~2 hours, so the
+-- refresh token must be kept: both are stored encrypted (AES-256-GCM), never in plain text.
+CREATE TABLE IF NOT EXISTS bitbucket_connections (
+  user_id        uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  account_uuid   text NOT NULL,
+  username       text NOT NULL,
+  access_token   text NOT NULL,
+  refresh_token  text NOT NULL,
+  expires_at     timestamptz NOT NULL,
+  excluded_repos text[] NOT NULL DEFAULT '{}',
+  created_at     timestamptz NOT NULL DEFAULT now()
+);

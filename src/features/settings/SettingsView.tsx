@@ -10,7 +10,7 @@ import { useSettings } from "@/hooks/useData";
 import type { StandupFormat } from "@/lib/domain/types";
 import { AccountDetails } from "./AccountDetails";
 import { DataControls } from "./DataControls";
-import { GithubIntegration } from "./GithubIntegration";
+import { IntegrationCard } from "./IntegrationCard";
 import { GithubForm } from "./GithubForm";
 import { SettingsSection } from "./SettingsSection";
 
@@ -58,9 +58,12 @@ export function SettingsView() {
 
         <SettingsSection
           title="Private & company repos"
-          description="Track work in private repositories through the ShipLog GitHub App. Pick exactly which repos count."
+          description="Connect GitHub or Bitbucket to include private work. Pick exactly which repos count."
         >
-          <GithubIntegration />
+          <div className="flex flex-col gap-4">
+            <IntegrationCard provider="github" />
+            <IntegrationCard provider="bitbucket" />
+          </div>
         </SettingsSection>
 
         <SettingsSection title="Standup format" description="The default formatting for generated standups.">
