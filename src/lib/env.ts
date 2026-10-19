@@ -11,6 +11,12 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url().optional(),
   AUTH_SECRET: z.string().min(32).optional(),
   DEMO_GITHUB_USERNAME: z.string().min(1).max(39).optional(),
+  // ShipLog GitHub App (optional): enables private-repo activity. See scripts/create-github-app.mjs.
+  GITHUB_APP_ID: z.string().regex(/^\d+$/).optional(),
+  GITHUB_APP_SLUG: z.string().min(1).optional(),
+  GITHUB_APP_CLIENT_ID: z.string().min(1).optional(),
+  GITHUB_APP_CLIENT_SECRET: z.string().min(1).optional(),
+  GITHUB_APP_PRIVATE_KEY: z.string().min(1).optional(),
 });
 
 type Env = z.infer<typeof envSchema>;

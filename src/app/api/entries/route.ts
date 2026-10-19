@@ -4,8 +4,9 @@ import { aiErrorResponse } from "@/lib/ai/guard";
 import { wrapUserInput } from "@/lib/ai/prompts";
 import { getModel } from "@/lib/ai/provider";
 import { aiCallSettings } from "@/lib/ai/settings";
-import { createEntry, getSettings, listEntries } from "@/lib/db/repo";
-import { fetchActivity, formatActivity } from "@/lib/server/github";
+import { createEntry, listEntries } from "@/lib/db/repo";
+import { userActivity } from "@/lib/server/activity";
+import { formatActivity } from "@/lib/server/github";
 import { structurePrompt } from "@/lib/server/prompts";
 import { createEntryRequest, rangeQuery, structuredLogSchema } from "@/lib/server/schemas";
 
@@ -17,10 +18,7 @@ export const GET = userRoute({ query: rangeQuery }, async ({ user, query }) =>
 
 /** Structures a spoken log with AI (cross-checked against today's GitHub activity) and saves it. */
 export const POST = userRoute({ body: createEntryRequest, rateLimit: true }, async ({ request, body, user }) => {
-  const settings = await getSettings(user.id);
-  const activity = settings.githubUsername
-    ? await fetchActivity(settings.githubUsername, body.date, body.date, body.timeZone)
-    : [];
+  const { activity } = await userActivity(user.id, body.date, body.date, body.timeZone);
 
   let structured;
   try {

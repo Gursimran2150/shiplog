@@ -73,3 +73,17 @@ export interface Ticket {
 
 export const MAX_LOG_CHARS = 4000;
 export const MAX_QUESTION_CHARS = 500;
+
+export interface RepoAccess {
+  fullName: string;
+  private: boolean;
+  tracked: boolean;
+}
+
+export interface GithubConnection {
+  /** False when the server has no GitHub App configured (public-username mode only). */
+  appEnabled: boolean;
+  connected: boolean;
+  login: string | null;
+  manageUrl: string | null;
+}

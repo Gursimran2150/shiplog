@@ -40,3 +40,13 @@ CREATE TABLE IF NOT EXISTS reports (
   created_at  timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, kind, source_hash)
 );
+
+-- Private-repo access through the ShipLog GitHub App. Only the installation id is stored:
+-- access tokens are minted on demand (1 hour) and never persisted.
+CREATE TABLE IF NOT EXISTS github_connections (
+  user_id         uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  installation_id bigint NOT NULL,
+  github_login    text NOT NULL,
+  excluded_repos  text[] NOT NULL DEFAULT '{}',
+  created_at      timestamptz NOT NULL DEFAULT now()
+);

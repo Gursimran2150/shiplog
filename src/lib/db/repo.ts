@@ -187,3 +187,40 @@ export async function saveReport(userId: string, kind: ReportKind, sourceHash: s
     INSERT INTO reports (user_id, kind, source_hash, content) VALUES (${userId}, ${kind}, ${sourceHash}, ${content})
     ON CONFLICT (user_id, kind, source_hash) DO UPDATE SET content = EXCLUDED.content, created_at = now()`;
 }
+
+// ---------- GitHub App connections ----------
+
+interface GithubConnectionRow {
+  installationId: number;
+  login: string;
+  excluded: string[];
+}
+
+const connectionRow = z.object({
+  installation_id: z.coerce.number(),
+  github_login: z.string(),
+  excluded_repos: z.array(z.string()),
+});
+
+export async function getGithubConnection(userId: string): Promise<GithubConnectionRow | null> {
+  const result = await db()`
+    SELECT installation_id, github_login, excluded_repos FROM github_connections WHERE user_id = ${userId}`;
+  const [row] = rows(connectionRow, result);
+  return row ? { installationId: row.installation_id, login: row.github_login, excluded: row.excluded_repos } : null;
+}
+
+export async function saveGithubConnection(userId: string, installationId: number, login: string): Promise<void> {
+  await db()`
+    INSERT INTO github_connections (user_id, installation_id, github_login) VALUES (${userId}, ${installationId}, ${login})
+    ON CONFLICT (user_id) DO UPDATE SET installation_id = EXCLUDED.installation_id, github_login = EXCLUDED.github_login`;
+}
+
+export async function setExcludedRepos(userId: string, excluded: string[]): Promise<boolean> {
+  const result = await db()`
+    UPDATE github_connections SET excluded_repos = ${excluded}::text[] WHERE user_id = ${userId} RETURNING user_id AS id`;
+  return rows(idRow, result).length > 0;
+}
+
+export async function deleteGithubConnection(userId: string): Promise<void> {
+  await db()`DELETE FROM github_connections WHERE user_id = ${userId}`;
+}

@@ -10,6 +10,7 @@ import { useSettings } from "@/hooks/useData";
 import type { StandupFormat } from "@/lib/domain/types";
 import { AccountDetails } from "./AccountDetails";
 import { DataControls } from "./DataControls";
+import { GithubIntegration } from "./GithubIntegration";
 import { GithubForm } from "./GithubForm";
 import { SettingsSection } from "./SettingsSection";
 
@@ -49,10 +50,17 @@ export function SettingsView() {
       <PageHeader eyebrow="Preferences" title="Settings" />
       <div className="flex flex-col gap-4">
         <SettingsSection
-          title="GitHub"
+          title="GitHub (public)"
           description="Public commits and PRs only. No GitHub login needed. ShipLog uses them to spot work you forgot to mention."
         >
           {isLoading ? <ControlSkeleton /> : <GithubForm initial={settings.githubUsername} onSave={saveGithub} />}
+        </SettingsSection>
+
+        <SettingsSection
+          title="Private & company repos"
+          description="Track work in private repositories through the ShipLog GitHub App. Pick exactly which repos count."
+        >
+          <GithubIntegration />
         </SettingsSection>
 
         <SettingsSection title="Standup format" description="The default formatting for generated standups.">
