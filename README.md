@@ -6,7 +6,7 @@
 
 **Talk about your day. Ship your standup.**
 
-A voice-first work journal for software engineers. Speak for 30 seconds with Wispr Flow (Hinglish welcome), and ShipLog turns it into a clean daily log, checks it against your GitHub and Bitbucket activity, and writes your **standup**, **weekly report** and **appraisal brag doc**.
+A voice-first work journal for software engineers. Speak for 30 seconds with Wispr Flow (Hinglish welcome), and ShipLog turns it into a clean daily log, checks it against your GitHub and Bitbucket activity, follows every task from start to shipped as a **journey**, and writes your **standup**, **weekly report** and **appraisal brag doc**.
 
 [**Open the live app →**](https://shiplog-voice.vercel.app) · [Demo video](https://VIDEO-LINK) · [How to use](#-how-to-use-shiplog) · [Connect your repos](#-connect-github--bitbucket) · [Is it safe?](#-safety--privacy)
 
@@ -42,9 +42,9 @@ It's built for one person's own workflow: frontend, backend or full-stack engine
 
 ## ⚡ How it works in 60 seconds
 
-| 1. Speak                                                                                    | 2. Review                                                                                               | 3. Ship                                                                          |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Hold your Wispr Flow key and ramble about your day, in English or Hinglish, pauses and all. | AI splits it into **Done / In progress / Blockers / Tomorrow** and flags commits you forgot to mention. | One click for a Slack standup, a weekly report or a brag doc. Copy, paste, done. |
+| 1. Speak                                                                                    | 2. Review                                                                                                                                       | 3. Ship                                                                          |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Hold your Wispr Flow key and ramble about your day, in English or Hinglish, pauses and all. | AI splits it into **Done / In progress / Blockers / Tomorrow**, links each item to its task's journey, and flags commits you forgot to mention. | One click for a Slack standup, a weekly report or a brag doc. Copy, paste, done. |
 
 ## 🚀 Try it now (no sign-up)
 
@@ -104,7 +104,7 @@ ShipLog writes clean English in four sections, keeping your project names and nu
 
 Reopen a report on unchanged logs and it comes back instantly as **"Saved report"**, with no new AI call.
 
-<p align="center"><img src="docs/media/reports.gif" width="760" alt="Generating a standup and a brag doc" /></p>
+<p align="center"><img src="docs/media/reports.gif" width="760" alt="Generating a standup, picking last week from the calendar for a weekly report, and a brag doc" /></p>
 
 <table>
 <tr>
@@ -125,7 +125,22 @@ Reopen a report on unchanged logs and it comes back instantly as **"Saved report
 - ShipLog's AI links new log items to your open tasks as you log, even when you word things differently. Wrong link? Use **Move**.
 - Search and filter (Open / Blocked / Done) to find, say, every blocker you hit this quarter and how each one got fixed.
 
+<p align="center"><img src="docs/media/journeys.gif" width="880" alt="From Today's log to a task's journey: the timeline, searching tasks, saving a learning, and moving an item to another task" /></p>
+
 <p align="center"><img src="docs/screenshots/journeys.png" width="880" alt="Journeys: project tree on the left; the usage API task's timeline (blocked, milestone, done) and its notes on the right" /></p>
+
+<table>
+<tr>
+<td><img src="docs/screenshots/today-journey-links.png" alt="Today: every item has Journey and Move" /></td>
+<td><img src="docs/screenshots/journeys-notes.png" alt="Notes on a task: how it was fixed and learnings" /></td>
+<td><img src="docs/screenshots/journeys-move.png" alt="Move an item to another task, start a new one, or mark it routine" /></td>
+</tr>
+<tr>
+<td align="center"><sub>Journey &amp; Move on every log item</sub></td>
+<td align="center"><sub>How it was fixed, learnings</sub></td>
+<td align="center"><sub>Fix a wrong link in two clicks</sub></td>
+</tr>
+</table>
 
 ### Step 6: Look back (Timeline & Ask)
 
@@ -159,7 +174,7 @@ Reopen a report on unchanged logs and it comes back instantly as **"Saved report
 <img src="docs/screenshots/mobile-journeys.png" width="250" alt="Mobile: a task journey" />
 </p>
 
-> 🎬 Full-quality clips: [log your day](docs/media/log-your-day.mp4) · [onboarding](docs/media/onboarding.mp4) · [reports](docs/media/reports.mp4) · [explore](docs/media/explore.mp4) · [mobile](docs/media/mobile.mp4)
+> 🎬 Full-quality clips: [log your day](docs/media/log-your-day.mp4) · [onboarding](docs/media/onboarding.mp4) · [reports](docs/media/reports.mp4) · [journeys](docs/media/journeys.mp4) · [explore](docs/media/explore.mp4) · [mobile](docs/media/mobile.mp4)
 
 ---
 
