@@ -55,6 +55,8 @@ export type StandupFormat = (typeof STANDUP_FORMATS)[number];
 export interface Settings {
   githubUsername: string | null;
   standupFormat: StandupFormat;
+  /** Finished or skipped the first-run tour. */
+  onboarded: boolean;
 }
 
 export interface DayCount {

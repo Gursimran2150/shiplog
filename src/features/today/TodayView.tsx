@@ -5,6 +5,8 @@ import { useEntries } from "@/hooks/useData";
 import { useTimeZone, useToday } from "@/hooks/useToday";
 import { SECTIONS, SECTION_LABELS, type Entry } from "@/lib/domain/types";
 import { EarlierToday } from "./EarlierToday";
+import { itemCount } from "./entry-edit";
+import { FirstRunGuide } from "./FirstRunGuide";
 import { GithubActivityPanel } from "./GithubActivityPanel";
 import { LogComposer } from "./LogComposer";
 import { MissedPanel } from "./MissedPanel";
@@ -23,15 +25,23 @@ export function TodayView() {
   const today = useToday();
   const timeZone = useTimeZone();
   const { entries, isLoading } = useEntries(today, today);
-  const { result, submitting, error, submit, addMissed, forget } = useDayLog(today, timeZone);
+  const { result, submitting, error, submit, addMissed, editResult, forget } = useDayLog(today, timeZone);
   const wordsToday = useMemo(() => entries.reduce((sum, e) => sum + e.words, 0), [entries]);
+  const saved = useMemo(() => result && { words: result.entry.words, items: itemCount(result.entry.data) }, [result]);
 
   return (
     <>
       <TodayHeader today={today} wordsToday={wordsToday} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex min-w-0 flex-col gap-6">
-          <LogComposer ready={Boolean(today && timeZone)} submitting={submitting} error={error} onSubmit={submit} />
+          <FirstRunGuide today={today} />
+          <LogComposer
+            ready={Boolean(today && timeZone)}
+            submitting={submitting}
+            error={error}
+            onSubmit={submit}
+            saved={saved}
+          />
           <p role="status" aria-live="polite" className="sr-only">
             {submitting ? "Structuring your day…" : result ? announce(result.entry) : ""}
           </p>
@@ -40,7 +50,7 @@ export function TodayView() {
           ) : (
             result && (
               <>
-                <StructuredResult entry={result.entry} />
+                <StructuredResult entry={result.entry} onEdit={editResult} />
                 <MissedPanel missed={result.missed} onAdd={addMissed} />
               </>
             )

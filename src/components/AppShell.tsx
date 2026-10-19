@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { Keyboard, LogOut, Map } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/hooks/useData";
 import { api } from "@/lib/api-client";
 import { hardNavigate } from "@/lib/navigation";
+import { tourStore } from "@/lib/tour-store";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 import { isActive, NAV_ITEMS } from "./nav";
@@ -60,6 +61,13 @@ function UserMenu() {
           <ThemeToggle />
         </div>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => tourStore.replay()}>
+          <Map aria-hidden="true" /> Replay welcome tour
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "?" }))}>
+          <Keyboard aria-hidden="true" /> Keyboard shortcuts
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={logout}>
           <LogOut aria-hidden="true" /> Log out
         </DropdownMenuItem>
@@ -69,7 +77,7 @@ function UserMenu() {
 }
 
 /** Vercel dashboard layout: top bar with account menu, then a scrollable tab row. */
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, actions }: { children: ReactNode; actions?: ReactNode }) {
   const pathname = usePathname();
   const { user } = useSession();
 
@@ -90,7 +98,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               </span>
             )}
           </div>
-          <UserMenu />
+          <div className="flex items-center gap-3">
+            {actions}
+            <UserMenu />
+          </div>
         </div>
         <nav aria-label="Main" className="mx-auto max-w-6xl overflow-x-auto px-2 sm:px-4">
           <ul className="flex">

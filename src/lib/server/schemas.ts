@@ -87,4 +87,5 @@ export const askRequest = z.object({
 export const settingsSchema = z.object({
   githubUsername: githubUsername.nullable(),
   standupFormat: z.enum(STANDUP_FORMATS),
+  onboarded: z.boolean().default(false),
 });

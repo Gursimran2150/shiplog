@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { githubUsernameError, normalizeGithubUsername } from "./github-username";
+import { githubUsernameError, normalizeGithubUsername } from "@/lib/domain/github-username";
 
 describe("GitHub username validation", () => {
   it("accepts valid usernames and empty input", () => {

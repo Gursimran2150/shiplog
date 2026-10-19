@@ -1,12 +1,13 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
-import { useId, useState, type FormEvent, type KeyboardEvent } from "react";
+import { CircleCheck, Sparkles } from "lucide-react";
+import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { MAX_LOG_CHARS } from "@/lib/domain/types";
 import { cn } from "@/lib/utils";
-import { countWords } from "./log-text";
+import { appendStarter, countWords } from "./log-text";
+import { SpeakingPrompts } from "./SpeakingPrompts";
 
 const MIN_CHARS = 3;
 const PLACEHOLDER =
@@ -17,12 +18,17 @@ interface LogComposerProps {
   submitting: boolean;
   error: string | null;
   onSubmit: (text: string) => Promise<boolean>;
+  /** Stats of the last successful save, shown until the user starts a new log. */
+  saved?: { words: number; items: number } | null;
 }
 
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
 /** The dictation box: Wispr Flow types into it, ⌘/Ctrl+Enter sends it to be structured. */
-export function LogComposer({ ready, submitting, error, onSubmit }: LogComposerProps) {
+export function LogComposer({ ready, submitting, error, onSubmit, saved = null }: LogComposerProps) {
   const ids = { text: useId(), hint: useId(), count: useId(), error: useId() };
   const [text, setText] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chars = text.length;
   const canSubmit = ready && !submitting && text.trim().length >= MIN_CHARS;
 
@@ -30,6 +36,16 @@ export function LogComposer({ ready, submitting, error, onSubmit }: LogComposerP
     e.preventDefault();
     if (!canSubmit) return;
     if (await onSubmit(text.trim())) setText("");
+  }
+
+  /** Adds a starter phrase on a new line and puts the caret after it, ready for dictation. */
+  function handlePrompt(starter: string) {
+    const next = appendStarter(text, starter);
+    setText(next);
+    const box = textareaRef.current;
+    if (!box) return;
+    box.focus();
+    requestAnimationFrame(() => box.setSelectionRange(next.length, next.length));
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
@@ -50,6 +66,7 @@ export function LogComposer({ ready, submitting, error, onSubmit }: LogComposerP
       </p>
       <textarea
         id={ids.text}
+        ref={textareaRef}
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -61,6 +78,13 @@ export function LogComposer({ ready, submitting, error, onSubmit }: LogComposerP
         disabled={submitting}
         className="mt-3 block min-h-40 w-full resize-y rounded-md border border-input bg-transparent px-3 py-2.5 text-base leading-relaxed outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 aria-invalid:border-destructive dark:bg-input/30"
       />
+      <SpeakingPrompts disabled={submitting} onPick={handlePrompt} />
+      {saved && !text && !submitting && !error && (
+        <p className="mt-3 flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
+          <CircleCheck aria-hidden="true" className="size-3.5 text-success" />
+          Saved · {plural(saved.words, "word")} → {plural(saved.items, "item")}
+        </p>
+      )}
       {error && (
         <p id={ids.error} role="alert" className="mt-2 text-sm text-destructive">
           {error}

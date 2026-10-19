@@ -34,4 +34,17 @@ describe("LogComposer", () => {
     render(<LogComposer ready submitting={false} error="AI is busy" onSubmit={vi.fn()} />);
     expect(screen.getByRole("alert")).toHaveTextContent("AI is busy");
   });
+
+  it("adds a speaking starter on a new line and focuses the box", () => {
+    const { box } = setup();
+    fireEvent.change(box, { target: { value: "fixed CI" } });
+    fireEvent.click(screen.getByRole("button", { name: "Anything blocking" }));
+    expect(box).toHaveValue("fixed CI\nBlocked on: ");
+    expect(box).toHaveFocus();
+  });
+
+  it("shows what the last save produced while the box is empty", () => {
+    render(<LogComposer ready submitting={false} error={null} onSubmit={vi.fn()} saved={{ words: 12, items: 1 }} />);
+    expect(screen.getByText("Saved · 12 words → 1 item")).toBeInTheDocument();
+  });
 });

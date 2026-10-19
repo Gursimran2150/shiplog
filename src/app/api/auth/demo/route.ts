@@ -25,7 +25,11 @@ export const POST = publicRoute({ rateLimit: true }, async () => {
   const env = getEnv();
   await Promise.all([
     insertEntries(user.id, demoEntries(localDate(new Date(), "Asia/Kolkata"))),
-    saveSettings(user.id, { githubUsername: env.DEMO_GITHUB_USERNAME ?? null, standupFormat: "slack" }),
+    saveSettings(user.id, {
+      githubUsername: env.DEMO_GITHUB_USERNAME ?? null,
+      standupFormat: "slack",
+      onboarded: false,
+    }),
   ]);
 
   const session = { id: user.id, name: user.name, email: user.email, isDemo: true };

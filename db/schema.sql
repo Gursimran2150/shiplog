@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS settings (
   standup_format  text NOT NULL DEFAULT 'slack',
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS onboarded boolean NOT NULL DEFAULT false;
 
 -- One row per spoken log. `data` holds the AI-structured sections; `search` powers "Ask your journal".
 CREATE TABLE IF NOT EXISTS entries (

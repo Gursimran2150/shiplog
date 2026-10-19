@@ -9,6 +9,7 @@ import { SegmentedControl } from "@/components/SegmentedControl";
 import { useSettings } from "@/hooks/useData";
 import type { StandupFormat } from "@/lib/domain/types";
 import { AccountDetails } from "./AccountDetails";
+import { DataControls } from "./DataControls";
 import { GithubForm } from "./GithubForm";
 import { SettingsSection } from "./SettingsSection";
 
@@ -70,6 +71,13 @@ export function SettingsView() {
 
         <SettingsSection title="Account" description="You're signed in as this user.">
           <AccountDetails />
+        </SettingsSection>
+
+        <SettingsSection
+          title="Your data"
+          description="Download everything you've logged, or delete your account for good."
+        >
+          <DataControls />
         </SettingsSection>
       </div>
     </>

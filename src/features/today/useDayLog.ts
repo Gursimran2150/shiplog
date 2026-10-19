@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useJournalActions } from "@/hooks/useData";
-import type { Entry, MissedActivity } from "@/lib/domain/types";
+import type { Entry, EntryData, MissedActivity } from "@/lib/domain/types";
 import { errorMessage } from "./errors";
 import { appendToDone, repoFromUrl } from "./log-text";
 
@@ -18,6 +18,13 @@ export function useDayLog(today: string | null, timeZone: string | null) {
   const [result, setResult] = useState<DayLogResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Bumped per edit so an older save finishing late can't overwrite a newer optimistic state. */
+  const editVersion = useRef(0);
+  /** Latest result for `editResult`, so its identity doesn't change on every edit. */
+  const latest = useRef(result);
+  useEffect(() => {
+    latest.current = result;
+  }, [result]);
 
   const submit = useCallback(
     async (text: string): Promise<boolean> => {
@@ -58,8 +65,33 @@ export function useDayLog(today: string | null, timeZone: string | null) {
     [result, updateEntry],
   );
 
+  /**
+   * Applies an inline edit to the result: shown immediately, saved in the background, rolled back with a
+   * toast if the save fails. Takes an updater so callers stay stable across edits (see `latest`).
+   */
+  const editResult = useCallback(
+    async (change: (data: EntryData) => EntryData) => {
+      const current = latest.current?.entry;
+      if (!current) return;
+      const data = change(current.data);
+      if (data === current.data) return;
+      const version = ++editVersion.current;
+      const sameEntry = (entry: Entry) => (r: DayLogResult | null) =>
+        r && r.entry.id === current.id ? { ...r, entry } : r;
+      setResult(sameEntry({ ...current, data }));
+      try {
+        const saved = await updateEntry(current.id, data);
+        if (version === editVersion.current) setResult(sameEntry(saved));
+      } catch (err) {
+        if (version === editVersion.current) setResult(sameEntry(current));
+        toast.error(errorMessage(err, "Couldn't save that change. Please try again."));
+      }
+    },
+    [updateEntry],
+  );
+
   /** Drops the result card if its entry was deleted from the list below. */
   const forget = useCallback((id: string) => setResult((current) => (current?.entry.id === id ? null : current)), []);
 
-  return { result, submitting, error, submit, addMissed, forget };
+  return { result, submitting, error, submit, addMissed, editResult, forget };
 }

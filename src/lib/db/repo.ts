@@ -63,24 +63,37 @@ export async function createUser(input: {
   return rows(userRow, result)[0] ?? null;
 }
 
+/** Deletes the user; ON DELETE CASCADE removes their settings, entries and reports in the same statement. */
+export async function deleteUser(userId: string): Promise<void> {
+  await db()`DELETE FROM users WHERE id = ${userId}`;
+}
+
 // ---------- settings ----------
 
-const DEFAULT_SETTINGS: Settings = { githubUsername: null, standupFormat: "slack" };
+const DEFAULT_SETTINGS: Settings = { githubUsername: null, standupFormat: "slack", onboarded: false };
 
 export async function getSettings(userId: string): Promise<Settings> {
-  const result = await db()`SELECT github_username, standup_format FROM settings WHERE user_id = ${userId}`;
-  const [row] = rows(z.object({ github_username: z.string().nullable(), standup_format: z.string() }), result);
+  const result = await db()`SELECT github_username, standup_format, onboarded FROM settings WHERE user_id = ${userId}`;
+  const [row] = rows(
+    z.object({ github_username: z.string().nullable(), standup_format: z.string(), onboarded: z.boolean() }),
+    result,
+  );
   if (!row) return DEFAULT_SETTINGS;
-  const parsed = settingsSchema.safeParse({ githubUsername: row.github_username, standupFormat: row.standup_format });
+  const parsed = settingsSchema.safeParse({
+    githubUsername: row.github_username,
+    standupFormat: row.standup_format,
+    onboarded: row.onboarded,
+  });
   return parsed.success ? parsed.data : DEFAULT_SETTINGS;
 }
 
 export async function saveSettings(userId: string, settings: Settings): Promise<void> {
   await db()`
-    INSERT INTO settings (user_id, github_username, standup_format, updated_at)
-    VALUES (${userId}, ${settings.githubUsername}, ${settings.standupFormat}, now())
+    INSERT INTO settings (user_id, github_username, standup_format, onboarded, updated_at)
+    VALUES (${userId}, ${settings.githubUsername}, ${settings.standupFormat}, ${settings.onboarded}, now())
     ON CONFLICT (user_id) DO UPDATE
-      SET github_username = EXCLUDED.github_username, standup_format = EXCLUDED.standup_format, updated_at = now()`;
+      SET github_username = EXCLUDED.github_username, standup_format = EXCLUDED.standup_format,
+          onboarded = EXCLUDED.onboarded, updated_at = now()`;
 }
 
 // ---------- entries ----------

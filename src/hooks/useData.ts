@@ -9,7 +9,7 @@ import type { Activity, DayCount, Entry, EntryData, MissedActivity, Settings } f
 const EMPTY_ENTRIES: Entry[] = [];
 const EMPTY_DAYS: DayCount[] = [];
 const EMPTY_ACTIVITY: Activity[] = [];
-const DEFAULT_SETTINGS: Settings = { githubUsername: null, standupFormat: "slack" };
+const DEFAULT_SETTINGS: Settings = { githubUsername: null, standupFormat: "slack", onboarded: true };
 
 /** SWR keys are plain URLs; this matches every cached entries/stats range so one save refreshes them all. */
 const isJournalKey = (key: unknown) =>

@@ -1,4 +1,4 @@
-import type { EntryData } from "@/lib/domain/types";
+import { MAX_LOG_CHARS, type EntryData } from "@/lib/domain/types";
 
 /** Whitespace-separated word count (same rule the server uses for `Entry.words`). */
 export function countWords(text: string): number {
@@ -16,4 +16,14 @@ export function appendToDone(data: EntryData, text: string, project: string | nu
 export function repoFromUrl(url: string): string | null {
   const match = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)/.exec(url);
   return match ? match[1] : null;
+}
+
+/**
+ * Appends a speaking starter (e.g. "Blocked on: ") on its own line, so the caret lands right after it.
+ * Returns `text` unchanged if the result would exceed `max` characters.
+ */
+export function appendStarter(text: string, starter: string, max = MAX_LOG_CHARS): string {
+  const base = text.replace(/[ \t]+$/, "");
+  const next = base === "" || base.endsWith("\n") ? base + starter : `${base}\n${starter}`;
+  return next.length > max ? text : next;
 }
