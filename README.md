@@ -1,114 +1,304 @@
-# ShipLog: talk about your day, ship your standup
+<div align="center">
 
-> A voice-first work journal for software engineers. Hold your **Wispr Flow** key, ramble about your day for 30 seconds (Hinglish welcome), and ShipLog turns it into a clean log, cross-checks it against your GitHub commits, and writes your **standup**, **weekly report** and **appraisal brag doc**.
+<img src="src/app/apple-icon.png" width="72" alt="ShipLog logo" />
 
-**Live:** https://shiplog-voice.vercel.app · **Demo video:** https://VIDEO-LINK
+# ShipLog
 
-## Try it (no sign-up)
+**Talk about your day. Ship your standup.**
 
-| Option                         | How                                                                                                                                                 |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **One-tap demo (recommended)** | Click **"Try the demo"**. You get a private account pre-filled with two weeks of sample logs, so reports, the timeline and search work immediately. |
-| **Shared demo account**        | `demo@shiplog.dev` / `shiplog-demo-2026`                                                                                                            |
-| **Your own account**           | Click **"New here? Create an account"**                                                                                                             |
+A voice-first work journal for software engineers. Speak for 30 seconds with Wispr Flow (Hinglish welcome), and ShipLog turns it into a clean daily log, checks it against your GitHub and Bitbucket activity, and writes your **standup**, **weekly report** and **appraisal brag doc**.
 
-## The problem (mine)
+[**Open the live app →**](https://shiplog-voice.vercel.app) · [Demo video](https://VIDEO-LINK) · [How to use](#-how-to-use-shiplog) · [Connect your repos](#-connect-github--bitbucket) · [Is it safe?](#-safety--privacy)
 
-I'm a frontend engineer. Every day I write a standup, every Friday a weekly update, and at appraisal time I try to remember six months of work, usually badly. Writing these is slow and boring, so they end up vague ("worked on dashboard"). **Talking** about my day is easy. ShipLog makes the spoken version the source of truth.
+<img src="docs/media/log-your-day.gif" width="880" alt="Dictating a Hinglish end-of-day note, then ShipLog structuring it into Done, In progress, Blockers and Tomorrow" />
 
-**Who it's for:** individual engineers who post async standups (Slack/Teams), write weekly reports for a manager, and need a record of impact for reviews.
+</div>
 
-## How it works
+---
 
-1. **Today:** dictate your day into one box with Wispr Flow. ShipLog's AI structures it into **Done / In progress / Blockers / Tomorrow** with project tags.
-2. **GitHub cross-check:** ShipLog reads your public commits and PRs for the day and flags work you shipped but forgot to mention ("Missed from GitHub"). One click adds it.
-3. **Blocker → ticket:** turn any blocker or to-do into a GitHub issue draft with acceptance criteria, then open it pre-filled in GitHub.
-4. **Reports:** a standup (Slack, Teams or plain), a weekly report, or a brag doc for any period. Unchanged logs return the saved report instantly.
-5. **Timeline:** a contribution heatmap, streaks and stats.
-6. **Ask your journal:** _"When did I last work on onboarding?"_ answered from your own entries with dates.
-7. **Guided start:** a 5-step welcome tour (skippable, replayable) that also connects GitHub and sets your standup format. First-time hints and "what to say" prompts live right on Today.
-8. **Fast everywhere:** a `⌘K` command menu, `?` for shortcuts, and inline editing of any structured item.
-9. **Your data:** export the whole journal as Markdown, or permanently delete your account.
+## Contents
 
-## Private and company repos (GitHub + Bitbucket)
+- [Who it's for](#-who-its-for)
+- [How it works in 60 seconds](#-how-it-works-in-60-seconds)
+- [Try it now](#-try-it-now-no-sign-up)
+- [How to use ShipLog](#-how-to-use-shiplog)
+- [Connect GitHub & Bitbucket](#-connect-github--bitbucket)
+- [How tracking works](#-how-tracking-works)
+- [Safety & privacy](#-safety--privacy)
+- [Where we use GenAI](#-where-we-use-genai)
+- [How Wispr Flow was used](#-how-wispr-flow-was-used)
+- [Architecture & engineering](#-architecture--engineering)
+- [Run it yourself](#-run-it-yourself)
 
-Users never create apps. They click **Settings → Connect GitHub / Connect Bitbucket**, approve on the provider's own screen, and pick which repos ShipLog tracks (each repo has an include/exclude switch).
+---
 
-|                 | GitHub                                                                       | Bitbucket Cloud                                 |
-| --------------- | ---------------------------------------------------------------------------- | ----------------------------------------------- |
-| Mechanism       | ShipLog GitHub App (installed per account/org)                               | OAuth 2.0 consumer (authorized per user)        |
-| Access          | Read-only: contents, metadata, pull requests, on the repos chosen at install | Read-only: account, repositories, pull requests |
-| Stored          | Installation id only; 1-hour tokens minted on demand                         | Access + refresh token, AES-256-GCM encrypted   |
-| Ownership check | Signed `state` + GitHub confirms the user can access the installation        | Signed `state` bound to the user                |
+## 👩‍💻 Who it's for
 
-**One-time setup by whoever deploys ShipLog:**
+**Software engineers who have to report on their own work**: an async standup in Slack or Teams every morning, a weekly update for a manager, and a list of achievements every appraisal cycle.
 
-- **GitHub:** `node scripts/create-github-app.mjs https://your-domain`, then click once. GitHub's manifest flow creates the App, and its credentials are written to `.env.local` (`GITHUB_APP_*`).
-- **Bitbucket:** in any workspace you own, go to _Workspace settings → OAuth consumers → Add consumer_. Set the callback URL to `https://your-domain/api/bitbucket/callback`, and grant Account: Read, Repositories: Read and Pull requests: Read. Copy the key and secret into `BITBUCKET_CLIENT_ID` and `BITBUCKET_CLIENT_SECRET`.
+The problem: writing those updates is slow and boring, so they come out vague ("worked on dashboard"), and six months of real impact is forgotten by review time. **Talking** about your day takes 30 seconds. ShipLog makes the spoken version the source of truth, and fills the gaps from the commits and pull requests you actually pushed.
 
-Without these variables the app falls back to public GitHub activity by username.
+It's built for one person's own workflow: frontend, backend or full-stack engineers, at a company (private GitHub or Bitbucket repos) or on personal projects (public GitHub).
 
-## How I used Wispr Flow
+## ⚡ How it works in 60 seconds
 
-- **Building:** I built ShipLog by voice. Prompts to my AI coding assistant, product decisions, commit messages, this README and my build-in-public posts were dictated with Wispr Flow (see my usage card).
-- **In the product:** Wispr Flow is the input method. ShipLog's main screen is one large text box designed for dictation: rambling, Hinglish and filler words are expected, and the AI writes clean professional English from it.
+| 1. Speak                                                                                    | 2. Review                                                                                               | 3. Ship                                                                          |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Hold your Wispr Flow key and ramble about your day, in English or Hinglish, pauses and all. | AI splits it into **Done / In progress / Blockers / Tomorrow** and flags commits you forgot to mention. | One click for a Slack standup, a weekly report or a brag doc. Copy, paste, done. |
 
-## GenAI services used and where
+## 🚀 Try it now (no sign-up)
 
-| Where               | Model                                               | Purpose                                                  |
-| ------------------- | --------------------------------------------------- | -------------------------------------------------------- |
-| `POST /api/entries` | Google Gemini `gemini-3.5-flash`, structured output | Spoken log → validated sections + "missed from GitHub"   |
-| `POST /api/reports` | Gemini, streaming                                   | Standup / weekly report / brag doc                       |
-| `POST /api/tickets` | Gemini, structured output                           | Blocker → GitHub issue draft                             |
-| `POST /api/ask`     | Gemini, streaming, grounded                         | Answers from your entries (Postgres full-text retrieval) |
+| Option                         | How                                                                                                                                                                                                                          |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **One-tap demo** (recommended) | Open **[shiplog-voice.vercel.app](https://shiplog-voice.vercel.app)** and click **"Try the demo"**. You get a private account pre-filled with two weeks of sample logs, so reports, the timeline and search work right away. |
+| **Shared demo login**          | `demo@shiplog.dev` / `shiplog-demo-2026`                                                                                                                                                                                     |
+| **Your own account**           | Click **"New here? Create an account"**.                                                                                                                                                                                     |
 
-OpenAI `gpt-5.4-mini` is an automatic fallback (`AI_PROVIDER`).
+<p align="center"><img src="docs/screenshots/landing.png" width="880" alt="ShipLog landing and login page" /></p>
 
-## Architecture
+---
+
+## 📖 How to use ShipLog
+
+### Step 1: The welcome tour (first login)
+
+A five-step tour explains ShipLog and sets up your account: your Wispr Flow shortcut, your GitHub username, and your preferred standup format. Every step has **Skip tour**, and you can replay it any time from the avatar menu or `⌘K`.
+
+<p align="center"><img src="docs/media/onboarding.gif" width="760" alt="The five-step welcome tour" /></p>
+
+### Step 2: Log your day (Today)
+
+At the end of your day, open **Today**, click the big box, hold your Wispr Flow key (Mac: `fn`, Windows: `Ctrl + Win`) and talk:
+
+> _"aaj checkout page ka Safari wala crash fix kiya aur PR raise kar diya. Dashboard ke usage charts pe kaam chal raha hai, 80 percent ho gaya. Backend ka usage API abhi ready nahi hai, Rahul se baat karni hai. Kal onboarding flow ka redesign shuru karna hai."_
+
+Not sure what to say? Tap the hints under the box (_What you finished · What's in progress · Anything blocking · Plan for tomorrow_). Then press **Structure my day** (or `⌘/Ctrl + Enter`).
+
+<p align="center"><img src="docs/screenshots/today-dictated.png" width="880" alt="Today page with a dictated Hinglish note" /></p>
+
+### Step 3: Review the structured log
+
+ShipLog writes clean English in four sections, keeping your project names and numbers. Anything off? **Edit ✏️, remove ✕ or "+ Add item"**. Changes save automatically.
+
+- **Missed from GitHub** lists commits and PRs you pushed today but didn't mention. **Add to Done** puts them in your log.
+- **Create ticket** on any blocker or to-do drafts a GitHub issue with acceptance criteria, which you can open pre-filled on GitHub.
+- **Today on GitHub** (right) shows your activity across connected repos.
+
+<p align="center"><img src="docs/screenshots/today-structured.png" width="880" alt="Structured log with Done, In progress, Blockers, Tomorrow and Missed from GitHub" /></p>
+
+### Step 4: Generate your updates (Reports)
+
+| When           | Tab               | What you get                                                                                      |
+| -------------- | ----------------- | ------------------------------------------------------------------------------------------------- |
+| Every morning  | **Standup**       | Yesterday / Today / Blockers, formatted for Slack, Teams or plain text. Click **Copy** and paste. |
+| Every Friday   | **Weekly report** | Highlights, Shipped, In progress, Blockers & risks, Next week, for your manager.                  |
+| Appraisal time | **Brag doc**      | Your work over 30 days, a quarter or 6 months, grouped by project, with impact. **Download .md**. |
+
+Reopen a report on unchanged logs and it comes back instantly as **"Saved report"**, with no new AI call.
+
+<p align="center"><img src="docs/media/reports.gif" width="760" alt="Generating a standup and a brag doc" /></p>
+
+<table>
+<tr>
+<td><img src="docs/screenshots/reports-standup.png" alt="Slack-formatted standup" /></td>
+<td><img src="docs/screenshots/reports-brag.png" alt="Brag doc grouped by project" /></td>
+</tr>
+</table>
+
+### Step 5: Look back (Timeline & Ask)
+
+- **Timeline:** a contribution heatmap of every day you logged, with your streak, items shipped and top project. Click a day (or use the arrow keys) to see that week.
+- **Ask your journal:** _"When did I last work on onboarding?"_ or _"What blockers did I have this month?"_. Answers come only from your own entries, with dates.
+
+<table>
+<tr>
+<td><img src="docs/screenshots/timeline.png" alt="Timeline heatmap and week view" /></td>
+<td><img src="docs/screenshots/ask.png" alt="Ask your journal answering with dates" /></td>
+</tr>
+</table>
+
+### Step 6: Move fast
+
+- `⌘K` / `Ctrl K` opens the command menu: jump anywhere, generate reports, switch theme, replay the tour.
+- `?` lists every keyboard shortcut.
+- Light, dark or system theme, and a full mobile layout.
+
+<table>
+<tr>
+<td><img src="docs/screenshots/command-menu.png" alt="Command menu" /></td>
+<td><img src="docs/screenshots/timeline-dark.png" alt="Dark mode" /></td>
+</tr>
+</table>
+
+<p align="center">
+<img src="docs/screenshots/mobile-tour.png" width="250" alt="Mobile: welcome tour" />
+<img src="docs/screenshots/mobile-today.png" width="250" alt="Mobile: structured log" />
+<img src="docs/screenshots/mobile-timeline.png" width="250" alt="Mobile: timeline" />
+</p>
+
+> 🎬 Full-quality clips: [log your day](docs/media/log-your-day.mp4) · [onboarding](docs/media/onboarding.mp4) · [reports](docs/media/reports.mp4) · [explore](docs/media/explore.mp4) · [mobile](docs/media/mobile.mp4)
+
+---
+
+## 🔗 Connect GitHub & Bitbucket
+
+Go to **Settings → Private & company repos**. You never create an app or token yourself. You click Connect, approve on GitHub's or Bitbucket's own page, and come back.
+
+<p align="center"><img src="docs/screenshots/settings.png" width="880" alt="Settings with GitHub and Bitbucket connections and data controls" /></p>
+
+### Public GitHub (simplest)
+
+Enter your GitHub username under **GitHub (public)**. ShipLog reads your **public** commits and PRs. No login needed.
+
+### Private & company GitHub repos
+
+1. Click **Connect GitHub**. You're sent to GitHub to install the **ShipLog Voice Journal** app.
+2. Choose **All repositories** or **Only select repositories**, on your personal account or an organization. Organizations may ask an admin to approve.
+3. You're returned to ShipLog with a list of granted repos.
+
+### Bitbucket
+
+1. Click **Connect Bitbucket** and approve read-only access on bitbucket.org.
+2. You're returned to ShipLog with your repositories listed.
+
+### Choose what counts
+
+Every connected repo has a **Track** switch, plus **Track all / Track none**. Excluded repos are never read. Use **Manage access** to change what the provider shares, or **Disconnect** at any time.
+
+> **Bitbucket tip:** commits are matched to your account, so make sure the email you commit with is added in Bitbucket → Personal settings → Email aliases.
+
+---
+
+## 🛰️ How tracking works
 
 ```mermaid
 flowchart LR
-  W[Wispr Flow dictation] --> UI[Next.js 16 UI on Vercel]
-  UI -->|JSON| API[Route handlers, Mumbai region]
-  API --> G[origin + session + rate limit + zod]
-  G --> AI{Gemini / OpenAI}
-  G --> DB[(Neon Postgres: entries, reports, settings)]
-  G --> GH[GitHub Search API, cached]
-  AI -->|streamed text / JSON| UI
+  V["🎙️ You speak<br/>(Wispr Flow)"] --> T[Today]
+  T -->|your words| AI[Gemini: structure the day]
+  GH[GitHub App / public GitHub] -->|today's commits & PRs<br/>tracked repos only| AI
+  BB[Bitbucket OAuth] -->|today's commits & PRs<br/>tracked repos only| AI
+  AI --> E[(Your journal entry)]
+  AI --> M[Missed from GitHub]
+  E --> R[Standup · Weekly · Brag doc]
+  E --> TL[Timeline & streaks]
+  E --> Q[Ask your journal]
 ```
 
-## Engineering
+1. **When you log a day**, ShipLog fetches that day's commits and pull requests **you authored**, from the repos you track, in parallel across GitHub and Bitbucket. Dates use your own time zone.
+2. The AI receives your spoken note plus that activity as reference. It writes the four sections from **what you said**, and lists commits you didn't mention as **missed** suggestions. ShipLog only keeps a "missed" link if it really exists in your activity.
+3. Each entry is saved per day. Reports, the timeline and Ask are all built from your saved entries.
+4. Activity is read **on demand only**, when you open Today or log a day. There is no background crawling of your code. Results are cached for 5 minutes.
 
-**Security**
+---
 
-- scrypt password hashing, and HS256 JWT sessions in an `HttpOnly; Secure; SameSite=Lax` cookie.
-- Origin-checked mutations (CSRF), per-user rate limits, and zod validation of every body and query.
-- Every SQL query is parameterised and scoped to the session user. DB rows are re-validated on read.
-- Prompt-injection guard: user text is wrapped as data. "Missed" GitHub links are only kept if they are really in the user's activity.
-- Strict CSP and security headers. GitHub access is read-only and public-only (no OAuth tokens stored).
+## 🔒 Safety & privacy
 
-**Efficiency**
+**What ShipLog can access**
 
-- **No zod or server code in the browser bundle.** Domain types are plain TS, and an ESLint rule blocks client imports of `zod` and server modules.
-- **Reports are cached in Postgres** by a hash of their input: reopening an unchanged report is one indexed lookup, not a model call.
-- GitHub responses are cached for 5 minutes. Commit and PR searches run in parallel.
-- **SQL does the heavy lifting:** heatmap counts are aggregated with `GROUP BY`, date ranges use the `(user_id, date)` index, and "Ask" retrieves with a GIN full-text index instead of sending the whole journal to the model.
-- Per-task output caps and low reasoning effort. Streaming renders are batched per animation frame, and markdown parsing is memoised.
-- Demo accounts are seeded with one bulk `INSERT … SELECT unnest(…)`.
+|               | Access                                              | Notes                                                                                   |
+| ------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| GitHub App    | **Read-only:** commits, pull requests, metadata     | Only the repos you grant on GitHub, minus any you exclude. No write access to anything. |
+| Bitbucket     | **Read-only:** account, repositories, pull requests | Only repos you track in ShipLog.                                                        |
+| Public GitHub | Public data only                                    | No login.                                                                               |
 
-**Accessibility:** semantic landmarks, a skip link, labelled controls, `aria-live` AI output, a keyboard-operable heatmap, WCAG AA contrast in light and dark (muted text is darkened from the brand grey to pass), and reduced-motion support.
+**What is stored, and what isn't**
 
-**Testing:** Vitest unit and route tests (AI mocked), Playwright end-to-end (desktop + mobile), and axe WCAG scans of every screen in both themes. CI runs lint, dead-code check (knip), typecheck, tests and build.
+| Stored (Neon Postgres)                                        | Never stored                                                            |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Your name, email, **scrypt-hashed** password                  | Your password in plain text                                             |
+| Your journal entries and generated reports                    | GitHub access tokens (minted for 1 hour on demand, kept in memory only) |
+| GitHub: the installation id and your login                    | Your code or file contents (ShipLog never reads file contents)          |
+| Bitbucket: access + refresh tokens, **AES-256-GCM encrypted** | Secrets in the browser (all API keys are server-only)                   |
 
-## Run locally
+**How it's protected**
+
+- Sessions are signed JWTs in an `HttpOnly`, `Secure`, `SameSite=Lax` cookie. Mutations are origin-checked (CSRF), and limits are applied per user.
+- Connect flows use a **signed, 10-minute state** tied to your account. For GitHub, ShipLog also asks GitHub to confirm you can access the installation before saving it.
+- Every database query is parameterised and scoped to your user id. Rows are re-validated on read.
+- AI prompts treat your text as data (prompt-injection guard), and the model is told never to invent work, numbers or links.
+- Strict Content-Security-Policy and security headers on every page.
+
+**You're in control**
+
+- **Settings → Your data → Export journal (.md)** downloads everything you've logged.
+- **Delete account** permanently removes your account, entries, reports and connections in one step.
+- **Disconnect** removes stored tokens. You can also revoke access on GitHub or Bitbucket.
+
+**AI provider:** to structure your day and write reports, your log text (and the day's commit titles) is sent to Google Gemini, or to OpenAI if Gemini is unavailable. Nothing else from your repositories is sent.
+
+---
+
+## 🤖 Where we use GenAI
+
+ShipLog runs on **Google Gemini `gemini-3.5-flash`** via the Vercel AI SDK, with **OpenAI `gpt-5.4-mini`** as an automatic fallback.
+
+| Feature              | Where in the code               | What the model does                                                                                                              | Technique                                                                  |
+| -------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Structure my day** | `POST /api/entries`             | Turns a rambling Hinglish note into Done / In progress / Blockers / Tomorrow with projects, and finds commits you didn't mention | Structured output (zod schema), grounded on your GitHub/Bitbucket activity |
+| **Create ticket**    | `POST /api/tickets`             | Writes a GitHub issue (title, context, acceptance criteria, labels) from a blocker                                               | Structured output                                                          |
+| **Standup**          | `POST /api/reports` (`standup`) | Yesterday / Today / Blockers in Slack, Teams or plain format                                                                     | Streaming, format-specific prompts                                         |
+| **Weekly report**    | `POST /api/reports` (`weekly`)  | Manager-ready weekly summary                                                                                                     | Streaming                                                                  |
+| **Brag doc**         | `POST /api/reports` (`brag`)    | Impact-focused achievements over months, grouped by project                                                                      | Streaming, facts-only prompt                                               |
+| **Ask your journal** | `POST /api/ask`                 | Answers questions about your past work, citing dates                                                                             | Retrieval with Postgres full-text search, then a grounded answer           |
+
+**How we keep it fast, cheap and honest**
+
+- **Reports are cached in the database** by a hash of their exact input, so unchanged logs mean no new model call.
+- Each task has an output cap and a low reasoning effort (`thinkingLevel: minimal` for extraction), plus a 45-second timeout.
+- Answers stream token by token. "Ask" retrieves only the relevant entries instead of sending the whole journal.
+- Prompts wrap your text as untrusted data, forbid invented facts, and keep technical names and numbers exactly as spoken.
+
+---
+
+## 🎙️ How Wispr Flow was used
+
+- **To build it:** ShipLog was built by voice. Prompts to my AI coding assistant, product decisions, commit messages, this README and build-in-public posts were dictated with Wispr Flow (see the usage card in the submission).
+- **In the product:** Wispr Flow is the input method. The Today screen is one large box designed for dictation: rambling, Hinglish and filler words are expected, and the hints, `⌘/Ctrl + Enter` and the AI clean-up all assume you spoke rather than typed.
+
+---
+
+## 🏗️ Architecture & engineering
+
+```mermaid
+flowchart LR
+  B[Browser · Next.js 16 / React 19] -->|JSON / streamed text| API[Route handlers · Vercel sin1]
+  API --> W["Wrappers: origin → session → rate limit → zod"]
+  W --> AI{Gemini · OpenAI fallback}
+  W --> DB[(Neon Postgres · Singapore)]
+  W --> GH[GitHub App · Search API]
+  W --> BB[Bitbucket Cloud API]
+```
+
+| Area              | What we did                                                                                                                                                                                                                                                                              |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Code quality**  | Strict TypeScript and small feature modules. One `userRoute`/`publicRoute` wrapper applies auth, CSRF, rate limits and validation in a fixed order. `knip` keeps dead code at zero, and an ESLint rule blocks server code and `zod` in client components.                                |
+| **Efficiency**    | Functions **and** database co-located in Singapore. No `zod` in the browser bundle. SQL `GROUP BY` for the heatmap, a GIN full-text index for Ask, and `(user_id, date)` indexes. Bulk inserts. Cached GitHub/Bitbucket calls with bounded concurrency. Frame-batched streaming renders. |
+| **Security**      | See [Safety & privacy](#-safety--privacy).                                                                                                                                                                                                                                               |
+| **Accessibility** | WCAG 2.1 AA scans of every page in light and dark mode. Labelled controls, `aria-live` AI output, a keyboard-operable heatmap and command menu, 44px touch targets, and reduced-motion support.                                                                                          |
+| **Testing**       | 155 unit/route/component tests (Vitest, AI mocked) and 71 Playwright end-to-end tests on desktop and mobile, including real AI calls, onboarding and data deletion, plus axe accessibility scans. CI runs lint, dead-code check, typecheck, tests and build.                             |
+
+**Tech:** Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · Vercel AI SDK · Google Gemini · OpenAI · Neon Postgres · GitHub App · Bitbucket OAuth · Vitest · Playwright · axe-core. Design system: Vercel's Geist, via DESIGN.md from getdesign.md.
+
+---
+
+## 🛠️ Run it yourself
 
 ```bash
 pnpm install
-cp .env.example .env.local   # add GEMINI_API_KEY, DATABASE_URL, AUTH_SECRET
-pnpm db:migrate
+cp .env.example .env.local     # fill in the values below
+pnpm db:migrate                # creates tables and the shared demo account
 pnpm dev
 ```
 
-## Tech
+| Variable                            | Required     | Purpose                                                                                                                                                                                         |
+| ----------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GEMINI_API_KEY` / `OPENAI_API_KEY` | At least one | AI provider (`AI_PROVIDER` picks the preferred one)                                                                                                                                             |
+| `DATABASE_URL`                      | ✅           | Neon Postgres                                                                                                                                                                                   |
+| `AUTH_SECRET`                       | ✅           | Signs sessions and derives the token-encryption key (`openssl rand -base64 32`)                                                                                                                 |
+| `GITHUB_APP_*`                      | Optional     | Private GitHub repos. Run `node scripts/create-github-app.mjs https://your-domain` once (GitHub manifest flow, one click).                                                                      |
+| `BITBUCKET_CLIENT_ID` / `_SECRET`   | Optional     | Bitbucket. Create an OAuth client in _Workspace settings → OAuth clients_ with callback `https://your-domain/api/bitbucket/callback` and read-only account, repository and pull request scopes. |
+| `DEMO_GITHUB_USERNAME`              | Optional     | Public GitHub user whose activity demo accounts show                                                                                                                                            |
 
-Next.js 16 · React 19 · TypeScript · Tailwind v4 · shadcn/ui · Vercel AI SDK · Google Gemini · Neon Postgres · GitHub REST API · Vitest · Playwright · axe-core. Design system: Vercel's Geist, via DESIGN.md from getdesign.md.
+**Tests:** `pnpm test` (unit), `pnpm test:e2e` (Playwright, uses real AI when a key is set), `pnpm check` (everything CI runs).
+
+**Docs media:** `node scripts/capture-docs.mjs` re-records every screenshot and clip from a running app, and `scripts/encode-media.sh` converts them into the MP4s and GIFs above.

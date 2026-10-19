@@ -49,3 +49,4 @@ next-env.d.ts
 # vercel
 .vercel
 /e2e/.auth
+/docs/media/raw
