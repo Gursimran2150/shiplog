@@ -26,6 +26,9 @@ I'm a frontend engineer. Every day I write a standup, every Friday a weekly upda
 4. **Reports:** a standup (Slack, Teams or plain), a weekly report, or a brag doc for any period. Unchanged logs return the saved report instantly.
 5. **Timeline:** a contribution heatmap, streaks and stats.
 6. **Ask your journal:** _"When did I last work on onboarding?"_ answered from your own entries with dates.
+7. **Guided start:** a 5-step welcome tour (skippable, replayable) that also connects GitHub and sets your standup format. First-time hints and "what to say" prompts live right on Today.
+8. **Fast everywhere:** a `⌘K` command menu, `?` for shortcuts, and inline editing of any structured item.
+9. **Your data:** export the whole journal as Markdown, or permanently delete your account.
 
 ## How I used Wispr Flow
 
