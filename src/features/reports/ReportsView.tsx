@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToday } from "@/hooks/useToday";
 import { BragTab } from "./BragTab";
+import { PrTab } from "./PrTab";
 import { StandupTab } from "./StandupTab";
 import { WeeklyTab } from "./WeeklyTab";
 
@@ -13,6 +14,7 @@ const TABS = [
   { value: "standup", label: "Standup", Panel: StandupTab },
   { value: "weekly", label: "Weekly report", Panel: WeeklyTab },
   { value: "brag", label: "Brag doc", Panel: BragTab },
+  { value: "pr", label: "PR description", Panel: PrTab },
 ] as const;
 type TabValue = (typeof TABS)[number]["value"];
 
@@ -33,11 +35,11 @@ export function ReportsView() {
       <PageHeader
         eyebrow="Write-ups"
         title="Reports"
-        description="Generated from your logs. Unchanged logs return the saved report instantly."
+        description="Standups, weekly reports and brag docs from your logs, plus PR descriptions from a quick voice note."
       />
       {today ? (
         <Tabs value={picked ?? linked} onValueChange={(v) => setPicked(v as TabValue)} className="gap-6">
-          <TabsList aria-label="Report type">
+          <TabsList aria-label="Report type" className="max-w-full justify-start overflow-x-auto">
             {TABS.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value} className="px-3">
                 {tab.label}

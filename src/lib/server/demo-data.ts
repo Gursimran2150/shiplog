@@ -25,6 +25,8 @@ const RECENT_TASKS: DemoTask[] = [
   { key: "safari-crash", title: "Fix payments page crash on Safari", project: "checkout" },
   { key: "button-refactor", title: "Refactor the design-system Button", project: "design-system" },
   { key: "flag-latency", title: "Fix slow feature-flag propagation in EU", project: "platform" },
+  { key: "dark-tokens", title: "Add dark-mode colour tokens to the design system", project: "design-system" },
+  { key: "billing-migration", title: "Run the billing schema migration on staging", project: "billing" },
 ];
 
 const RECENT_NOTES: DemoNote[] = [
@@ -159,7 +161,7 @@ const SAMPLES: Omit<DemoDay, "date">[] = [
     },
   },
   {
-    raw: "Playwright mein Safari add kiya CI mein. Onboarding wizard ka final copy aa gaya, update kar diya. Demo diya PM ko.",
+    raw: "Playwright mein Safari add kiya CI mein. Onboarding wizard ka final copy aa gaya, update kar diya. Demo diya PM ko. Dark mode ke tokens Figma se export nahi hue, Neha ko bola hai.",
     data: {
       summary: "Added Safari to CI, updated onboarding copy and demoed to the PM.",
       done: [
@@ -168,7 +170,9 @@ const SAMPLES: Omit<DemoDay, "date">[] = [
         item("Demoed onboarding flow to the PM", "onboarding", "onboarding"),
       ],
       inProgress: [item("Addressing PM feedback on onboarding", "onboarding", "onboarding")],
-      blockers: [],
+      blockers: [
+        item("Dark-mode colour tokens not exported from Figma yet (waiting on Neha)", "design-system", "dark-tokens"),
+      ],
       tomorrow: [item("Ship onboarding behind a feature flag", "onboarding", "onboarding")],
     },
   },
@@ -186,7 +190,7 @@ const SAMPLES: Omit<DemoDay, "date">[] = [
     },
   },
   {
-    raw: "Button refactor done, Storybook docs update kiye. Onboarding conversion 12 percent badha. Ab 50 percent rollout ka plan hai.",
+    raw: "Button refactor done, Storybook docs update kiye. Onboarding conversion 12 percent badha. Ab 50 percent rollout ka plan hai. Dark tokens abhi bhi Neha se pending hain.",
     data: {
       summary: "Finished the Button refactor; onboarding conversion is up 12%.",
       done: [
@@ -194,7 +198,9 @@ const SAMPLES: Omit<DemoDay, "date">[] = [
         item("Measured onboarding conversion: +12%", "onboarding", "onboarding"),
       ],
       inProgress: [],
-      blockers: [],
+      blockers: [
+        item("Dark-mode tokens still not exported from Figma (waiting on Neha)", "design-system", "dark-tokens"),
+      ],
       tomorrow: [item("Roll onboarding out to 50% of users", "onboarding", "onboarding")],
     },
   },
@@ -202,9 +208,9 @@ const SAMPLES: Omit<DemoDay, "date">[] = [
 
 /** Today's log for demo accounts, so the Today screen opens with work already on it. */
 const TODAY: Omit<DemoDay, "date"> = {
-  raw: "Onboarding 50 percent users pe rollout kar diya, completion metrics dekh raha hoon. Support queue se 4 bugs triage kiye. EU mein feature flag update hone mein 10 minute lag rahe hain, Karan se baat ki. Kal metrics theek rahe to 100 percent.",
+  raw: "Onboarding 50 percent users pe rollout kar diya, completion metrics dekh raha hoon. Support queue se 4 bugs triage kiye. EU mein feature flag update hone mein 10 minute lag rahe hain, Karan se baat ki. Billing migration staging pe chalani hai par DBA approval chahiye, Priya se. Kal metrics theek rahe to 100 percent.",
   data: {
-    summary: "Rolled onboarding out to 50% of users; flag propagation in the EU is slow.",
+    summary: "Rolled onboarding out to 50% of users; blocked on EU flag propagation and a staging DB approval.",
     done: [
       item("Rolled onboarding out to 50% of users", "onboarding", "onboarding"),
       item("Triaged 4 bugs from the support queue", null),
@@ -212,6 +218,7 @@ const TODAY: Omit<DemoDay, "date"> = {
     inProgress: [item("Watching onboarding completion and error rates after rollout", "onboarding", "onboarding")],
     blockers: [
       item("Feature flags take ~10 min to update in the EU region (waiting on Karan)", "platform", "flag-latency"),
+      item("Billing schema migration on staging needs DBA approval (waiting on Priya)", "billing", "billing-migration"),
     ],
     tomorrow: [
       item("Ramp onboarding to 100% if metrics hold", "onboarding", "onboarding"),

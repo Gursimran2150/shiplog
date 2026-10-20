@@ -154,3 +154,16 @@ export interface TaskJourney {
 }
 
 export const MAX_NOTE_CHARS = 2000;
+
+/** An open blocker: a task whose latest day of work was blocked, and who it's waiting on. */
+export interface WaitingItem {
+  taskId: string;
+  title: string;
+  project: string | null;
+  /** The latest blocker text logged for the task. */
+  blocker: string;
+  /** Who or what it's waiting on, read from the blocker text; null when not said. */
+  person: string | null;
+  /** First day of the current blocked stretch. */
+  since: string;
+}

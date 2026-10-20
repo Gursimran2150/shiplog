@@ -14,17 +14,19 @@ const PROMPTS = [
 interface SpeakingPromptsProps {
   disabled?: boolean;
   onPick: (starter: string) => void;
+  /** Topics and the starter phrase each one adds (defaults to the daily-log topics). */
+  prompts?: readonly { label: string; starter: string }[];
 }
 
 /** "Not sure what to say?" pills: each one adds a starter line to the log for people who freeze at the mic. */
-export function SpeakingPrompts({ disabled, onPick }: SpeakingPromptsProps) {
+export function SpeakingPrompts({ disabled, onPick, prompts = PROMPTS }: SpeakingPromptsProps) {
   const labelId = useId();
   return (
     <div role="group" aria-labelledby={labelId} className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
       <span id={labelId} className="mr-1 text-xs text-muted-foreground">
         Not sure what to say? Cover:
       </span>
-      {PROMPTS.map(({ label, starter }) => (
+      {prompts.map(({ label, starter }) => (
         <Button
           key={starter}
           type="button"

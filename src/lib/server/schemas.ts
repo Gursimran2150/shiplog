@@ -195,3 +195,27 @@ export const linkItemBody = z.object({
   index: z.number().int().min(0).max(19),
   taskId: z.uuid().nullable(),
 });
+
+const NUDGE_TONES = ["friendly", "firm"] as const;
+
+/** Draft a follow-up message for one blocked task. */
+export const nudgeRequest = z.object({
+  taskId: z.uuid(),
+  tone: z.enum(NUDGE_TONES).default("friendly"),
+  today: isoDate,
+});
+
+/** Turn a spoken summary of a change into a pull-request description. */
+export const prRequest = z.object({
+  changes: z.string().trim().min(10, "Say a little more about what you changed.").max(MAX_LOG_CHARS),
+  taskId: z.uuid().nullable().default(null),
+  ticket: z
+    .string()
+    .trim()
+    .max(40)
+    .regex(/^[\w#./-]*$/, "Use a ticket id like ABC-123 or #42")
+    .default(""),
+});
+
+/** Write a postmortem for a task; `today` is the user's local date. */
+export const postmortemRequest = z.object({ today: isoDate });

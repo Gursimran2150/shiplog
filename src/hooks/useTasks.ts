@@ -3,10 +3,17 @@
 import { useCallback } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { api, fetcher } from "@/lib/api-client";
-import type { Entry, NoteKind, Section, TaskJourney, TaskNote, TaskSummary } from "@/lib/domain/types";
+import type { Entry, NoteKind, Section, TaskJourney, TaskNote, TaskSummary, WaitingItem } from "@/lib/domain/types";
 import { isJournalKey } from "./useData";
 
 const EMPTY_TASKS: TaskSummary[] = [];
+const EMPTY_WAITING: WaitingItem[] = [];
+
+/** Open blockers: who each one is waiting on and since when. */
+export function useWaiting() {
+  const { data, isLoading } = useSWR<{ items: WaitingItem[] }>("/api/waiting", fetcher);
+  return { items: data?.items ?? EMPTY_WAITING, isLoading };
+}
 
 /** Every task (journey) with its derived status, most recently active first. */
 export function useTasks() {

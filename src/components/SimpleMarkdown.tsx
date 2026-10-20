@@ -1,7 +1,7 @@
 import { Fragment, memo, useMemo, type ReactNode } from "react";
 
 type Block =
-  | { kind: "heading"; text: string }
+  | { kind: "heading"; level: number; text: string }
   | { kind: "list"; ordered: boolean; items: string[] }
   | { kind: "para"; text: string }
   | { kind: "rule" };
@@ -19,7 +19,7 @@ export function parseBlocks(source: string): Block[] {
     const line = raw.trimEnd();
     const bullet = /^\s*[-*•]\s+(.*)$/.exec(line);
     const numbered = /^\s*\d+[.)]\s+(.*)$/.exec(line);
-    const heading = /^#{1,6}\s+(.*)$/.exec(line);
+    const heading = /^(#{1,6})\s+(.*)$/.exec(line);
     const item = bullet?.[1] ?? numbered?.[1];
 
     if (!line.trim()) {
@@ -29,7 +29,7 @@ export function parseBlocks(source: string): Block[] {
       blocks.push({ kind: "rule" });
     } else if (heading) {
       flush();
-      blocks.push({ kind: "heading", text: heading[1] });
+      blocks.push({ kind: "heading", level: heading[1].length, text: heading[2] });
     } else if (item !== undefined) {
       flush();
       const ordered = Boolean(numbered);
@@ -44,7 +44,7 @@ export function parseBlocks(source: string): Block[] {
   return blocks;
 }
 
-const INLINE = /(\*\*[^*]+\*\*|\[[^\]\n]+\]\([^)\s]+\))/g;
+const INLINE = /(\*\*[^*]+\*\*|\[[^\]\n]+\]\([^)\s]+\)|(?<![\w*])_[^_\n]+_(?!\w)|`[^`\n]+`)/g;
 const LINK = /^\[([^\]\n]+)\]\(([^)\s]+)\)$/;
 
 /** Only absolute https URLs become links; anything else (javascript:, data:, relative) stays plain text. */
@@ -57,9 +57,19 @@ function safeHref(url: string): string | null {
   }
 }
 
-/** Renders **bold** spans and [label](https://…) links as React nodes (no HTML injection). */
+/** Renders **bold**, _italic_, `code` and [label](https://…) links as React nodes (no HTML injection). */
 function inline(text: string): ReactNode[] {
   return text.split(INLINE).map((part, i) => {
+    if (part.length > 2 && part.startsWith("_") && part.endsWith("_")) {
+      return <em key={i}>{part.slice(1, -1)}</em>;
+    }
+    if (part.length > 2 && part.startsWith("`") && part.endsWith("`")) {
+      return (
+        <code key={i} className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
       return (
         <strong key={i} className="font-semibold">
@@ -95,12 +105,22 @@ export const SimpleMarkdown = memo(function SimpleMarkdown({ text }: { text: str
     <div className="flex flex-col gap-3 text-[0.975rem] leading-7 break-words">
       {blocks.map((block, i) => {
         switch (block.kind) {
-          case "heading":
+          case "heading": {
+            // Generated text sits under the page's own h1/h2, so its headings start at h3.
+            const Heading = block.level === 1 ? "h3" : "h4";
             return (
-              <p key={i} className="pt-1 text-base font-semibold tracking-tight sm:text-lg">
+              <Heading
+                key={i}
+                className={
+                  block.level === 1
+                    ? "pt-1 text-lg font-semibold tracking-tight sm:text-xl"
+                    : "pt-1 text-base font-semibold tracking-tight sm:text-lg"
+                }
+              >
                 {inline(block.text)}
-              </p>
+              </Heading>
             );
+          }
           case "rule":
             return <hr key={i} className="my-1 border-border" />;
           case "list": {

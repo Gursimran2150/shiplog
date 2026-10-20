@@ -138,6 +138,7 @@ export async function updateTask(
 }
 
 const eventRow = z.object({
+  task_id: z.string(),
   entry_id: z.string(),
   date: z.string(),
   section: z.enum(SECTIONS),
@@ -147,18 +148,33 @@ const eventRow = z.object({
 
 const SECTION_ORDER: Record<Section, number> = { tomorrow: 0, inProgress: 1, blockers: 2, done: 3 };
 
-/** Every log item on a task's journey, oldest first (within a day: planned → working → blocked → done). */
-export async function taskEvents(userId: string, taskId: string): Promise<TaskEvent[]> {
+/**
+ * Every log item on the given tasks' journeys in one query, grouped by task, oldest first
+ * (within a day: planned → working → blocked → done).
+ */
+export async function eventsForTasks(userId: string, taskIds: readonly string[]): Promise<Map<string, TaskEvent[]>> {
+  const out = new Map<string, TaskEvent[]>(taskIds.map((id) => [id, []]));
+  if (!taskIds.length) return out;
   const result = await db()`
-    SELECT e.id AS entry_id, e.date::text, s.section, (item.ord - 1) AS idx, item.value->>'text' AS text
+    SELECT item.value->>'taskId' AS task_id, e.id AS entry_id, e.date::text, s.section, (item.ord - 1) AS idx,
+           item.value->>'text' AS text
     FROM entries e
     CROSS JOIN LATERAL (VALUES ('done'), ('inProgress'), ('blockers'), ('tomorrow')) AS s(section)
     CROSS JOIN LATERAL jsonb_array_elements(e.data -> s.section) WITH ORDINALITY AS item(value, ord)
-    WHERE e.user_id = ${userId} AND item.value->>'taskId' = ${taskId}::text
+    WHERE e.user_id = ${userId} AND item.value->>'taskId' = ANY(${[...taskIds]}::text[])
     ORDER BY e.date, e.created_at`;
-  return rows(eventRow, result)
-    .map((r) => ({ entryId: r.entry_id, date: r.date, section: r.section, index: r.idx, text: r.text }))
-    .sort((a, b) => a.date.localeCompare(b.date) || SECTION_ORDER[a.section] - SECTION_ORDER[b.section]);
+  for (const r of rows(eventRow, result)) {
+    out.get(r.task_id)?.push({ entryId: r.entry_id, date: r.date, section: r.section, index: r.idx, text: r.text });
+  }
+  for (const list of out.values()) {
+    list.sort((a, b) => a.date.localeCompare(b.date) || SECTION_ORDER[a.section] - SECTION_ORDER[b.section]);
+  }
+  return out;
+}
+
+/** Every log item on one task's journey, oldest first. */
+export async function taskEvents(userId: string, taskId: string): Promise<TaskEvent[]> {
+  return (await eventsForTasks(userId, [taskId])).get(taskId) ?? [];
 }
 
 const noteRow = z.object({ id: z.string(), kind: z.enum(NOTE_KINDS), body: z.string(), created_at: z.coerce.string() });

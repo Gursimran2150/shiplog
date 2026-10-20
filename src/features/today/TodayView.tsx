@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { WaitingBoard } from "@/features/waiting/WaitingBoard";
 import { useEntries } from "@/hooks/useData";
 import { useTimeZone, useToday } from "@/hooks/useToday";
 import { SECTIONS, SECTION_LABELS, type Entry } from "@/lib/domain/types";
@@ -59,7 +60,8 @@ export function TodayView() {
           )}
           <EarlierToday entries={entries} isLoading={isLoading} onDeleted={forget} />
         </div>
-        <aside className="min-w-0" aria-label="GitHub activity">
+        <aside className="flex min-w-0 flex-col gap-6" aria-label="Blockers and GitHub activity">
+          <WaitingBoard today={today} />
           <GithubActivityPanel today={today} timeZone={timeZone} />
         </aside>
       </div>

@@ -4,10 +4,12 @@ import {
   CalendarClock,
   CircleCheck,
   CircleDashed,
+  FileWarning,
   Flag,
   OctagonAlert,
   Pencil,
   Play,
+  Send,
   Unlock,
   type LucideIcon,
 } from "lucide-react";
@@ -18,12 +20,16 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectBadge } from "@/features/today/ProjectBadge";
 import { TOUCH_TARGET } from "@/features/today/touch";
+import { NudgeDialog } from "@/features/waiting/NudgeDialog";
 import { useTaskActions } from "@/hooks/useTasks";
+import { useToday } from "@/hooks/useToday";
 import { formatDay } from "@/lib/domain/dates";
 import { SECTION_LABELS, type TaskJourney } from "@/lib/domain/types";
+import { parseWaitingOn } from "@/lib/domain/waiting";
 import { cn } from "@/lib/utils";
 import { buildSteps, journeyStats, STEP_LABELS, type StepKind } from "./journey-steps";
 import { MoveToTask } from "./MoveToTask";
+import { PostmortemDialog } from "./PostmortemDialog";
 import { TaskNotes } from "./TaskNotes";
 import { TaskStatusIcon } from "./status";
 
@@ -36,6 +42,42 @@ const STEP_META: Record<StepKind, { icon: LucideIcon; accent: string; ring: stri
   unblocked: { icon: Unlock, accent: "text-success", ring: "border-success/50" },
   done: { icon: CircleCheck, accent: "text-success", ring: "border-success/60" },
 };
+
+/** Write-ups from a journey: a follow-up for an open blocker, and a postmortem from the whole story. */
+function JourneyActions({ journey }: { journey: TaskJourney }) {
+  const today = useToday();
+  const [open, setOpen] = useState<"nudge" | "postmortem" | null>(null);
+  const { task, events } = journey;
+  const blocker = task.status === "blocked" ? events.findLast((e) => e.section === "blockers") : undefined;
+  if (!events.length || !today) return null;
+
+  return (
+    <div className="mt-1 flex flex-wrap gap-2">
+      {blocker && (
+        <Button variant="outline" size="sm" className={TOUCH_TARGET} onClick={() => setOpen("nudge")}>
+          <Send aria-hidden="true" />
+          Draft nudge
+        </Button>
+      )}
+      <Button variant="outline" size="sm" className={TOUCH_TARGET} onClick={() => setOpen("postmortem")}>
+        <FileWarning aria-hidden="true" />
+        Write postmortem
+      </Button>
+      {open === "nudge" && blocker && (
+        <NudgeDialog
+          taskId={task.id}
+          person={parseWaitingOn(blocker.text)}
+          blocker={blocker.text}
+          today={today}
+          onClose={() => setOpen(null)}
+        />
+      )}
+      {open === "postmortem" && (
+        <PostmortemDialog taskId={task.id} title={task.title} today={today} onClose={() => setOpen(null)} />
+      )}
+    </div>
+  );
+}
 
 const day = (iso: string) => formatDay(iso, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -194,6 +236,7 @@ function JourneyHeader({ journey, days, blockedDays }: { journey: TaskJourney; d
           </span>
         )}
       </div>
+      <JourneyActions journey={journey} />
     </header>
   );
 }

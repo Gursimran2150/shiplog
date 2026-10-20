@@ -10,6 +10,18 @@ export interface Command {
 export const COMMANDS: readonly Command[] = [
   { id: "go:/", label: "Log today's work", group: "Create", keywords: "today speak dictate wispr entry" },
   { id: "go:/reports", label: "Generate a standup or report", group: "Create", keywords: "standup weekly brag doc" },
+  {
+    id: "go:/reports?tab=pr",
+    label: "Write a PR description",
+    group: "Create",
+    keywords: "pull request pr review github bitbucket voice",
+  },
+  {
+    id: "go:/#waiting",
+    label: "See who you're waiting on",
+    group: "Navigate",
+    keywords: "blockers blocked follow up nudge ping slack",
+  },
   { id: "go:/ask", label: "Ask your journal", group: "Create", keywords: "question search history" },
   {
     id: "go:/journeys",

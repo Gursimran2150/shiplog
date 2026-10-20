@@ -21,4 +21,10 @@ describe("isTypingTarget", () => {
     expect(isTypingTarget(document.createElement("button"))).toBe(false);
     expect(isTypingTarget(null)).toBe(false);
   });
+
+  it("finds the PR writer and the waiting-on board by everyday words", () => {
+    expect(filterCommands("pull request").map((c) => c.id)).toEqual(["go:/reports?tab=pr"]);
+    expect(filterCommands("nudge").map((c) => c.id)).toEqual(["go:/#waiting"]);
+    expect(new Set(COMMANDS.map((c) => c.id)).size).toBe(COMMANDS.length);
+  });
 });

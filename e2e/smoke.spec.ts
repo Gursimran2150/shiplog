@@ -8,6 +8,13 @@ for (const path of PAGES) {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("main")).toBeVisible();
   });
+
+  test(`${path} never scrolls sideways`, async ({ page }) => {
+    await page.goto(path === "/reports" ? "/reports?tab=pr" : path);
+    await page.waitForLoadState("networkidle");
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
 }
 
 test("tabs navigate between screens", async ({ page }) => {

@@ -36,4 +36,17 @@ describe("SimpleMarkdown", () => {
     expect(screen.getByText(/click me/)).toBeInTheDocument();
     expect(screen.getByText(/plain/)).toBeInTheDocument();
   });
+
+  it("renders headings as real headings below the page's own, plus _italic_ and `code`", () => {
+    render(
+      <SimpleMarkdown
+        text={"# Fix login\n## How to test\n_Add screenshots._ Run `pnpm test` (not snake_case_names)"}
+      />,
+    );
+    expect(screen.getByRole("heading", { level: 3, name: "Fix login" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 4, name: "How to test" })).toBeInTheDocument();
+    expect(screen.getByText("Add screenshots.").tagName).toBe("EM");
+    expect(screen.getByText("pnpm test").tagName).toBe("CODE");
+    expect(screen.getByText(/snake_case_names/).tagName).toBe("P");
+  });
 });

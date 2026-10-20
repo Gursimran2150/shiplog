@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import type { Entry } from "@/lib/domain/types";
-import { askPrompt, formatEntries, refinePrompt, reportPrompt, structurePrompt, ticketPrompt } from "./prompts";
+import {
+  askPrompt,
+  formatEntries,
+  formatJourney,
+  nudgePrompt,
+  postmortemPrompt,
+  prPrompt,
+  refinePrompt,
+  reportPrompt,
+  structurePrompt,
+  ticketPrompt,
+} from "./prompts";
 
 const entry = (date: string, done: string, project: string | null = "web"): Entry => ({
   id: date,
@@ -48,5 +59,56 @@ describe("prompts", () => {
     const r = refinePrompt(entry("2026-10-20", "Shipped X").data, [{ question: "Waiting on whom?", answer: "Rahul" }]);
     expect("prompt" in r && r.prompt).toContain("<user_input>\nQ: Waiting on whom?\nA: Rahul");
     expect(r.system).toContain("Shipped X");
+  });
+});
+
+describe("journey prompts", () => {
+  const journey = formatJourney(
+    {
+      id: "t",
+      title: "Usage API",
+      project: "dashboard",
+      status: "blocked",
+      firstDate: null,
+      lastDate: null,
+      events: 1,
+      notes: 1,
+    },
+    [{ entryId: "e", date: "2026-10-14", section: "blockers", index: 0, text: "API not ready (waiting on Rahul)" }],
+    [{ id: "n", kind: "fix", body: "Agreed the contract first", createdAt: "x" }],
+  );
+
+  it("renders a journey as dated log lines and labelled notes", () => {
+    expect(journey).toBe(
+      "Task: Usage API [dashboard] (status: blocked)\nLog:\n2026-10-14 Blockers: API not ready (waiting on Rahul)\nNotes:\nHow it was fixed: Agreed the contract first",
+    );
+  });
+
+  it("nudge: addresses the person, counts the days, follows the tone", () => {
+    const p = nudgePrompt(journey, "API not ready", "Rahul", "2026-10-14", "2026-10-19", "firm");
+    expect(p.system).toContain("to Rahul");
+    expect(p.system).toContain("Blocked since: Wed, 14 Oct (5 days)");
+    expect(p.system).toContain("never as YYYY-MM-DD");
+    expect(p.system).toContain("polite but firm");
+    expect(nudgePrompt(journey, "x", null, "2026-10-19", "2026-10-19", "friendly").system).toContain("(today)");
+  });
+
+  it("PR: wraps the spoken summary as data, adds the ticket and optional journey", () => {
+    const p = prPrompt("charts ko API se joda", journey, "DASH-42");
+    expect("prompt" in p && p.prompt).toContain("<user_input>\ncharts ko API se joda");
+    expect(p.system).toContain("Closes DASH-42");
+    expect(p.system).toContain("Task: Usage API");
+    expect(prPrompt("x", null, "").system).not.toContain("Closes");
+  });
+
+  it("postmortem: grounded on the journey and blameless", () => {
+    const p = postmortemPrompt(journey, "2026-10-19");
+    expect(p.system).toContain("Not recorded in the journal.");
+    expect(p.system).toContain("Never blame a person");
+    expect(p.system).toContain("How it was fixed: Agreed the contract first");
+  });
+
+  it("structure prompt keeps 'who we wait on' machine-readable", () => {
+    expect(structurePrompt("2026-10-20", "")).toContain("(waiting on <name or team>)");
   });
 });

@@ -17,7 +17,7 @@ const DAY_LOG =
 
 const browser = await chromium.launch();
 
-const STEPS = ["landing", "onboarding", "today", "reports", "explore", "dark", "journeys", "mobile"];
+const STEPS = ["landing", "onboarding", "today", "reports", "explore", "dark", "journeys", "workflows", "mobile"];
 /** Whether to run a step: all by default, a subset with ONLY, or everything from FROM_STEP on. */
 function step(name) {
   if (process.env.ONLY) return process.env.ONLY.split(",").includes(name);
@@ -269,7 +269,78 @@ if (step("journeys")) {
   await saveVideo(context, page, "journeys");
 }
 
-// 8. Mobile
+// 8. Everyday write-ups: nudge a blocker, PR description by voice, postmortem from a journey (video)
+if (step("workflows")) {
+  const { context, page } = await demoPage(DESKTOP, { video: true });
+  /** Waits for a (re)generation to finish: busy first (if we catch it), then done with text. */
+  const answerDone = async (region) => {
+    await region
+      .and(page.locator('[aria-busy="true"]'))
+      .waitFor({ timeout: 3000 })
+      .catch(() => {});
+    await region.and(page.locator('[aria-busy="false"]')).waitFor({ timeout: 60_000 });
+  };
+
+  // Waiting on: who you're blocked on, for how long, and a ready-to-paste follow-up.
+  const board = page.getByRole("region", { name: "Waiting on" });
+  await board.waitFor();
+  await page.waitForTimeout(1500);
+  await board.screenshot({ path: `${SHOTS}/waiting-board.png` });
+  await board
+    .getByRole("button", { name: /^Draft nudge to Neha/ })
+    .first()
+    .click();
+  const nudge = page.getByRole("dialog");
+  await answerDone(nudge.getByRole("region", { name: "Nudge message" }));
+  await page.waitForTimeout(1200);
+  await shot(page, "nudge-friendly");
+  await nudge.getByText("Firm", { exact: true }).click();
+  await answerDone(nudge.getByRole("region", { name: "Nudge message" }));
+  await page.waitForTimeout(1500);
+  await shot(page, "nudge-firm");
+  await page.keyboard.press("Escape");
+
+  // PR description from a spoken summary, with the task's journey as the "why".
+  await page.goto(`${BASE}/reports?tab=pr`);
+  const changes = page.getByLabel("What did you change?");
+  await changes.click();
+  const said =
+    "usage charts ko mock data se hata ke real usage API se joda. SWR se 5 minute cache kiya taaki dashboard fast rahe. IST totals wala bug bhi fix kiya. Test: dashboard kholo, date range badlo aur totals check karo.";
+  const words = said.split(" ");
+  for (let i = 0; i < words.length; i += 5) {
+    await changes.pressSequentially(`${words.slice(i, i + 5).join(" ")} `, { delay: 8 });
+    await page.waitForTimeout(120);
+  }
+  const picker = page.getByLabel("Task (optional)");
+  const value = await picker.locator("option", { hasText: "Integrate the usage API" }).first().getAttribute("value");
+  await picker.selectOption(value ?? "");
+  await page.getByLabel("Ticket (optional)").pressSequentially("DASH-42", { delay: 40 });
+  await page.waitForTimeout(500);
+  await shot(page, "pr-input");
+  await page.getByRole("button", { name: "Write PR description" }).click();
+  await answerDone(page.getByRole("region", { name: "AI response" }));
+  await page.waitForTimeout(800);
+  await shot(page, "pr-description", true);
+  await page.mouse.wheel(0, 700);
+  await page.waitForTimeout(1500);
+
+  // Postmortem from the journey: timeline + "how it was fixed" notes → blameless RCA.
+  await page.goto(`${BASE}/journeys`);
+  const tree = page.getByRole("navigation", { name: "Tasks by project" });
+  await tree.getByRole("searchbox").fill("usage api");
+  await tree.getByRole("button", { name: /Integrate the usage API into the dashboard/ }).click();
+  await page.waitForTimeout(1200);
+  await page.getByRole("button", { name: "Write postmortem" }).click();
+  const doc = page.getByRole("dialog").getByRole("region", { name: "Postmortem" });
+  await answerDone(doc);
+  await page.waitForTimeout(1500);
+  await shot(page, "postmortem");
+  await page.getByRole("dialog").getByRole("heading", { name: "What could be better" }).scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1500);
+  await saveVideo(context, page, "workflows");
+}
+
+// 9. Mobile
 if (step("mobile")) {
   const mobile = { ...devices["Pixel 7"], colorScheme: "light" };
   const { context, page } = await demoPage(mobile, { video: true, skipTour: false });

@@ -28,7 +28,15 @@ vi.mock("@/lib/auth/session", async (orig) => ({
   requireUser: async () => ({ ok: true, user: USER }),
 }));
 vi.mock("@/lib/db/repo", () => repo);
-const tasks = { openTasks: vi.fn(), insertTasks: vi.fn() };
+const tasks = {
+  openTasks: vi.fn(),
+  insertTasks: vi.fn(),
+  getTask: vi.fn(),
+  taskEvents: vi.fn(),
+  taskNotes: vi.fn(),
+  listTasks: vi.fn(),
+  eventsForTasks: vi.fn(),
+};
 vi.mock("@/lib/db/tasks", () => tasks);
 vi.mock("@/lib/ai/provider", () => ({ getModel: () => getModel() }));
 vi.mock("@/lib/server/github", async (orig) => ({
@@ -251,5 +259,139 @@ describe("POST /api/tickets", () => {
   it("rejects a malformed repo", async () => {
     const { POST } = await import("./tickets/route");
     expect((await POST(post("/api/tickets", { text: "x y z", repo: "not a repo" }))).status).toBe(400);
+  });
+});
+
+const TASK_ID = "6f1c2c1e-0000-4000-8000-00000000bbbb";
+const task = {
+  id: TASK_ID,
+  title: "Integrate the usage API",
+  project: "dashboard",
+  status: "blocked",
+  firstDate: "2026-10-14",
+  lastDate: "2026-10-16",
+  events: 2,
+  notes: 0,
+};
+const tev = (date: string, section: string, text: string) => ({ entryId: "e1", date, section, index: 0, text });
+
+describe("GET /api/waiting", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+  });
+
+  it("lists blocked tasks with who they wait on and since when", async () => {
+    tasks.listTasks.mockResolvedValue([task, { ...task, id: "done-task", status: "done" }]);
+    tasks.eventsForTasks.mockResolvedValue(
+      new Map([
+        [
+          TASK_ID,
+          [
+            tev("2026-10-14", "blockers", "Usage API not ready"),
+            tev("2026-10-16", "blockers", "Usage API not ready (waiting on Rahul)"),
+          ],
+        ],
+      ]),
+    );
+    const { GET } = await import("./waiting/route");
+    const res = await GET(new Request("http://localhost/api/waiting"));
+    expect((await res.json()).items).toEqual([
+      {
+        taskId: TASK_ID,
+        title: "Integrate the usage API",
+        project: "dashboard",
+        blocker: "Usage API not ready (waiting on Rahul)",
+        person: "Rahul",
+        since: "2026-10-14",
+      },
+    ]);
+    expect(tasks.eventsForTasks).toHaveBeenCalledWith(USER.id, [TASK_ID]);
+  });
+});
+
+describe("POST /api/waiting/nudge", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    tasks.getTask.mockResolvedValue(task);
+    tasks.taskNotes.mockResolvedValue([]);
+  });
+
+  it("streams a follow-up message for a blocked task", async () => {
+    tasks.taskEvents.mockResolvedValue([tev("2026-10-14", "blockers", "Usage API not ready (waiting on Rahul)")]);
+    getModel.mockReturnValue({ model: streamModel(["Hi Rahul, ", "any ETA on the usage API?"]) });
+    const { POST } = await import("./waiting/nudge/route");
+    const res = await POST(post("/api/waiting/nudge", { taskId: TASK_ID, tone: "firm", today: "2026-10-19" }));
+    expect(await res.text()).toBe("Hi Rahul, any ETA on the usage API?");
+  });
+
+  it("refuses tasks without a blocker, and unknown tasks, before calling the model", async () => {
+    tasks.taskEvents.mockResolvedValue([tev("2026-10-14", "inProgress", "Charts")]);
+    const { POST } = await import("./waiting/nudge/route");
+    expect((await POST(post("/api/waiting/nudge", { taskId: TASK_ID, today: "2026-10-19" }))).status).toBe(400);
+    tasks.getTask.mockResolvedValue(null);
+    expect((await POST(post("/api/waiting/nudge", { taskId: TASK_ID, today: "2026-10-19" }))).status).toBe(404);
+    expect(getModel).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/pr", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+  });
+
+  it("streams a PR description, using the picked task's journey for context", async () => {
+    tasks.getTask.mockResolvedValue(task);
+    tasks.taskEvents.mockResolvedValue([tev("2026-10-14", "blockers", "Usage API not ready")]);
+    tasks.taskNotes.mockResolvedValue([]);
+    getModel.mockReturnValue({ model: streamModel(["# Wire usage API into dashboard"]) });
+    const { POST } = await import("./pr/route");
+    const res = await POST(
+      post("/api/pr", {
+        changes: "usage charts ko real API se joda, mock hata diya",
+        taskId: TASK_ID,
+        ticket: "DASH-42",
+      }),
+    );
+    expect(await res.text()).toBe("# Wire usage API into dashboard");
+    expect(tasks.getTask).toHaveBeenCalledWith(USER.id, TASK_ID);
+  });
+
+  it("rejects a too-short summary and odd ticket ids", async () => {
+    const { POST } = await import("./pr/route");
+    expect((await POST(post("/api/pr", { changes: "fix" }))).status).toBe(400);
+    expect((await POST(post("/api/pr", { changes: "fixed the login redirect", ticket: "<script>" }))).status).toBe(400);
+    expect(getModel).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/tasks/[id]/postmortem", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    tasks.taskNotes.mockResolvedValue([]);
+  });
+  const call = async (id: string) => {
+    const { POST } = await import("./tasks/[id]/postmortem/route");
+    return POST(post(`/api/tasks/${id}/postmortem`, { today: "2026-10-19" }), { params: Promise.resolve({ id }) });
+  };
+
+  it("streams a postmortem from the journey", async () => {
+    tasks.getTask.mockResolvedValue(task);
+    tasks.taskEvents.mockResolvedValue([tev("2026-10-14", "blockers", "Usage API not ready")]);
+    getModel.mockReturnValue({ model: streamModel(["# Postmortem: Integrate the usage API"]) });
+    expect(await (await call(TASK_ID)).text()).toBe("# Postmortem: Integrate the usage API");
+  });
+
+  it("404s for someone else's task and 400s for an empty journey", async () => {
+    tasks.getTask.mockResolvedValue(null);
+    tasks.taskEvents.mockResolvedValue([]);
+    expect((await call(TASK_ID)).status).toBe(404);
+    tasks.getTask.mockResolvedValue(task);
+    expect((await call(TASK_ID)).status).toBe(400);
+    expect((await call("nope")).status).toBe(400);
+    expect(getModel).not.toHaveBeenCalled();
   });
 });
